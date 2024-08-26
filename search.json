@@ -1,12 +1,5 @@
 [
   {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "About this blog"
-  },
-  {
     "objectID": "posts/010-initial/index.html",
     "href": "posts/010-initial/index.html",
     "title": "Part I: Learning Software Engineering for Data Scientists - Building a Shiny Application",
@@ -47,6 +40,13 @@
     "title": "Part I: Learning Software Engineering for Data Scientists - Building a Shiny Application",
     "section": "Final Initial Prototype",
     "text": "Final Initial Prototype\nHere’s our final initial application prototype, it has a few filters, and displays a filtered dataframe.\n\n#| standalone: true\n#| components: [editor, viewer]\n#| viewerHeight: 650\n\nimport pandas as pd\nfrom shiny import App, render, reactive, ui\n\napp_ui = ui.page_fixed(\n    ui.output_ui(\"table_day_filter\"),\n    ui.output_ui(\"table_time_filter\"),\n    ui.output_data_frame(\"render_df\"),\n)\n\ndef server(input, output, session):\n\n    @reactive.calc\n    def filter_idx():\n        df = df_tips()\n        idx = df.index\n\n        filters = [\"filter_day\", \"filter_time\"]\n        cols = [\"day\", \"time\"]\n\n        for fltr, col in zip(filters, cols):\n            if input[fltr]():\n                current_idx = df.loc[df[col].isin(input[fltr]())].index\n                idx = idx.intersection(current_idx)\n\n        return list(idx)\n\n\n    # filtered dataframe from filters\n    @reactive.calc\n    def data_filtered():\n        df = df_tips().loc[filter_idx()]\n        return df\n\n    # dataframe to view in app\n    @render.data_frame\n    def render_df():\n        return render.DataGrid(data_filtered())\n\n    # table day filter\n    @render.ui\n    def table_day_filter():\n        return ui.input_selectize(\n            \"filter_day\",\n            \"table day filter:\",\n            df_tips()[\"day\"].unique().tolist(),\n            multiple=True,\n            remove_button=True,\n            options={\"plugins\": [\"clear_button\"]},\n        )\n\n    # table time filter\n    @render.ui\n    def table_time_filter():\n        return ui.input_selectize(\n            \"filter_time\",\n            \"table time filter:\",\n            df_tips()[\"time\"].unique().tolist(),\n            multiple=True,\n            remove_button=True,\n            options={\"plugins\": [\"clear_button\"]},\n        )\n\n    # placeholder for joined dataframe\n    @reactive.calc\n    def df_tips():\n        # fmt: off\n        data = {\n            'total_bill': [\n                16.99, 10.34, 21.01, 23.68, 24.59,\n                25.29, 8.77, 26.88, 15.04, 14.78\n            ],\n            'tip': [\n                1.01, 1.66, 3.50, 3.31, 3.61,\n                4.71, 2.00, 3.12, 3.52, 3.00\n            ],\n            'sex': [\n                'Female', 'Male', 'Male', 'Male', 'Female',\n                'Male', 'Male', 'Male', 'Male', 'Female'\n            ],\n            'smoker': [\n                'No', 'No', 'No', 'No', 'Yes',\n                'No', 'No', 'Yes', 'No', 'Yes'\n            ],\n            'day': [\n                'Sun', 'Fri', 'Sun', 'Thu', 'Sun',\n                'Sun', 'Sat', 'Sat', 'Sat', 'Sat'\n            ],\n            'time': [\n                'Dinner', 'Dinner', 'Lunch', 'Dinner', 'Lunch',\n                'Dinner', 'Lunch', 'Dinner', 'Lunch', 'Dinner'\n            ],\n            'size': [2, 3, 3, 2, 4, 4, 2, 4, 2, 2]\n        }\n        # fmt: on\n\n        df = pd.DataFrame(data)\n        return df\n\n\napp = App(app_ui, server)\n\n\nInternally, we’ve made a few key implementation decisions:\n\nTrack the row index label\nCompute and use a pandas.Index for the dataframe filter\n\nWe’ve also left a few placeholders to help scale the application:\n\nStore the data as a @reactive.calc, df_tips()\nLoop through all the filters to track the .intersection()\n\nIn the next part, we’ll add more filter components to the app and see what complexities arise when we work with more data types."
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this blog"
   },
   {
     "objectID": "index.html",
