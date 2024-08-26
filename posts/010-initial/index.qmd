@@ -1,0 +1,337 @@
+---
+title: "Part I: Learning Software Engineering for Data Scientists - Building a Shiny Application"
+subtitle: "Initial Prototype: Handling Filter Values"
+author: "Daniel Chen"
+
+format: html
+filters:
+  - shinylive
+---
+
+```{python}
+#| include: false
+
+import pandas as pd
+
+
+data = {
+    'total_bill': [
+        16.99, 10.34, 21.01, 23.68, 24.59,
+        25.29, 8.77, 26.88, 15.04, 14.78
+    ],
+    'tip': [
+        1.01, 1.66, 3.50, 3.31, 3.61,
+        4.71, 2.00, 3.12, 3.52, 3.00
+    ],
+    'sex': [
+        'Female', 'Male', 'Male', 'Male', 'Female',
+        'Male', 'Male', 'Male', 'Male', 'Female'
+    ],
+    'smoker': [
+        'No', 'No', 'No', 'No', 'Yes',
+        'No', 'No', 'Yes', 'No', 'Yes'
+    ],
+    'day': [
+        'Sun', 'Fri', 'Sun', 'Thu', 'Sun',
+        'Sun', 'Sat', 'Sat', 'Sat', 'Sat'
+    ],
+    'time': [
+        'Dinner', 'Dinner', 'Lunch', 'Dinner', 'Lunch',
+        'Dinner', 'Lunch', 'Dinner', 'Lunch', 'Dinner'
+    ],
+    'size': [2, 3, 3, 2, 4, 4, 2, 4, 2, 2]
+}
+
+df = pd.DataFrame(data)
+```
+
+We want to create a data portal application where users can pick
+data sets to be joined together and filters to filter the data.
+The final application will have the following features:
+
+1. Select data sets from a dropdown / selectize that generates a merged table
+2. Dynamically create filters for all columns (probably with a `for` loop)
+3. Filters will subset the dataframe
+4. Download the final dataframe view
+
+This is a series of building a shiny application that serves as a reference
+for a larger and more complicated application.
+It also goes through implementing a solution, improving it,
+and refactoring it as we go.
+It comes from a series of 1:1 meeting's with Joe Cheng on the Shiny team
+
+Think of this series as a
+"data scientist's guide to thinking like a software engineer".
+
+## Base Application
+
+We'll build on a small example dataframe using a sample of a
+generated `tips` data set.
+Some of the more complex decisions and features of the application
+we can put in place holder elements for
+
+1. The data will come from a `@reactive.calc` and be a placeholder for
+   a final joined dataframe
+2. All the UI elements will eventually be created by a larger `@render.ui` call,
+   so the UI elements will all be created in the `server()` function
+
+:::{.column-screen-inset}
+```{shinylive-python}
+#| standalone: true
+#| components: [editor, viewer]
+#| viewerHeight: 500
+
+{{< include ../../app/app-010-010-initial.py >}}
+```
+:::
+
+## Add Another Filter Component
+
+Let's go add another filter.
+We'll keep things simple for now,
+and add a filter for a column of the same data type,
+`time`, a categorical variable stored as a string.
+
+:::{.column-screen-inset}
+```{shinylive-python}
+#| standalone: true
+#| components: [editor, viewer]
+#| viewerHeight: 650
+
+{{< include ../../app/app-010-020-2_filters.py >}}
+```
+:::
+
+As we add more components,
+we have to add code to three locations in the code base:
+
+1. A new `@render.ui` function within the `server()` logic
+1. Calling the `@render.ui` within `app_ui`
+2. Filtering the dataframe within the `server()` logic,
+   in this case specifically in the `data_filtered()` `@reactive.calc`
+
+We will also want to be able to control the sorting of the filter drop down.
+At the moment the elements are presented in the order they appear in the data.
+We may want to sort them alphabetically, or in these two component examples,
+sort them based on time.
+
+:::{.callout-warning title="Things to fix"}
+- Different filter components may want options presented in different orders
+:::
+
+## How (Best) to Subset the Data
+
+Currently, we are passing our filter contents into an `.loc[]` row subsetting call
+in a series of `if` statements.
+This works just fine in our current simple example,
+but we know that in the future there will be more filters.
+
+You can always add another layer of abstraction to a program,
+and have your code run "in a single line of code".
+But, each layer of abstraction will make the code harder to reason with
+since you will have to look up the definition elsewhere to keep everything
+in your head.
+<!-- TODO: i may want to distinguish how this differs with the idea of chunking -->
+
+On the other hand,
+the current code using a sequence of `if` statements is fairly easy to reason with,
+you can see what is being checked along the way and how the data is filtered,
+and everything is right in front of you.
+However, we know that eventually this code will have many more `if` statements
+and you can make the case of cyclomatic complexity to at least abstract away
+the conditional if statements away that is doing the data filtering.
+
+We now run into the first big implementation decision in our application,
+we could systematically filter the dataframes by the values in the filter
+in a series of if statements,
+however, it would make our current `data_filtered()` `@reactive.cal`
+very long and complicated.
+It would be easier to track a row ID so we can deal with all the filters
+and then the `data_filtered()` would only need to filter based on the ID.
+This helps abstract away the complexity of the filtering we'll be doing,
+and potentially open us up for any more complicated filtering we would want
+to do later on.
+
+### Implementation Idea 1: Use an ID Column
+
+In `pandas` we _could_ create an ID column by resetting and using the `.index`.
+
+```python
+df.reset_index().rename(columns={"index": "id"})
+```
+
+We can check or track whether a data set has an ID column already,
+and if it doesn't we can create one.
+But, we do not want to modify the original datasets in this manner,
+since it will be displayed and eventually save the extra column we created.
+It also would make the application less general as a template,
+since it will force other users to always have an explicit ID column.
+
+### Implementation Idea 2: Track the Row Name (Pandas Index)
+
+A better way would be to track the the "row name" for each observation we want
+to keep.
+`pandas` does not have a "row name" but the `.index` can be used as one.
+We can assume since we are not processing any data,
+and this application is mainly serving as a data explorer,
+resetting the index of the dataframe and using the `.index` as a means
+to track the "row name" would be a good way to go.
+
+### Test the Concept
+
+We want to capture the index of the rows that match the filter,
+but when we are doing our final subsetting,
+we want to filter based on the `.loc[]` not `.iloc[]`.
+This will make sure as we make successive filters,
+and if the data gets scrambled,
+we are still pulling the correct row by the "row name" identifier.
+
+```{python}
+df.sample(frac=1, random_state=42)
+```
+
+```{python}
+idx = [6, 2, 1, 9]
+```
+
+If we look at the index values from `.loc[]`,
+it matches the indices we want to keep.
+
+```{python}
+df.sample(frac=1, random_state=42).loc[idx]
+```
+
+If we use `.iloc[]` we won't filter the rows we want.
+We can potentially even run into an out of bounds index with `.iloc[]`.
+
+```{python}
+df.sample(frac=1, random_state=42).iloc[idx]
+```
+
+:::{.callout-tip title="A good idea"}
+Track the index of the rows we want to filter.
+:::
+
+## Filter Based on Index Label
+
+One of the other benefits of tracking the index for filtering
+is we do not need to filter out data with the dataframe boolean bitwise filtering with `.loc[]` and `&`.
+At the point of filtering, we can just use the list of index values.
+
+```{python}
+df.loc[(df.time.isin(["Dinner"])) & (df['size'].isin([4]))]
+```
+
+If we can create just the container of index values,
+the code at the point of filtering would look much simpler.
+We would only need to track the row index labels when subsetting the
+final dataframe,
+and the logic for how the index values were generated can be abstracted away.
+This potentially opens us up for the ability to do any more complex filtering
+later on since only need to provide a list of index labels.
+
+```{python}
+idx = [5, 7] # creating this can be as complex as we need
+df.loc[idx]
+```
+
+### Create List of Indices
+
+Now, how do we create this list of indices?
+If we were doing the filtering one column at a time,
+we would be using the `&` operator across all the filters
+(see the code example above).
+We now need the equivalent of this on a list.
+We will separately get a list of indices that match the filter,
+and then filter down each list for values that match.
+In set theory, this is an `intersect`.
+
+We will create a new `@reactive.calc` called `filter_idx()`
+that will perform the same `if` statement checks as we did before.
+The difference now is at the point where the data is filtered,
+we only need to know that we're filtering based on
+all the index labels that matched the filter.
+
+:::{.column-screen-inset}
+```{shinylive-python}
+#| standalone: true
+#| components: [editor, viewer]
+#| viewerHeight: 650
+
+{{< include ../../app/app-010-030-filter_index.py >}}
+```
+:::
+
+
+### Iterative Improvement
+
+Now that we've modified the current code to roughly the parts we want,
+let's make a few code improvements.
+
+First,
+our new `filter_idx()` `@reactive.calc` still relies on a series of `if` statements.
+We want to eventually perform filters across all or an arbitrary number of
+columns and filter components,
+so we'd want to do the same `if` logic in a `for` loop.
+We will need to track the column name as well as the filter id used
+by Shiny.
+
+Second,
+the way `filter_idx()` was implemented has a lot of data type changes
+and isn't obvious what what type the `idx` variable is because
+the initial type is changed in the `return` statement,
+and used as if its an `.index` value.
+This makes the code extremely hard to reason with and maintain.
+We are expecting an `index` value,
+the initial `idx` variable is stored as a `set` so we can run `.intersection()`,
+but the return type is a `list`.
+
+
+:::{callout-note}
+The way `filter_idx()` was implemented wasn't written this way for
+pedagogical purposes.
+I really did write the code in this manner in the initial implementation.
+:::
+
+The first issue is fixed by using a `for` loop and creating a few
+accompanying variables.
+The second issue can be fixed by taking another look through the
+[pandas API reference]()
+and noticing that we did not actually need to use `.intersection()` on a `set`,
+the `index` object also has an
+[`.intersection()` method](https://pandas.pydata.org/docs/reference/api/pandas.Index.intersection.html)!
+This means we can implement `filter_idx()` using only index objects.
+
+:::{.callout-tip title="A good idea"}
+Do not change the data type of your variables during an implementation.
+:::
+
+## Final Initial Prototype
+
+Here's our final initial application prototype,
+it has a few filters, and displays a filtered dataframe.
+
+:::{.column-screen-inset}
+```{shinylive-python}
+#| standalone: true
+#| components: [editor, viewer]
+#| viewerHeight: 650
+
+{{< include ../../app/app-010-040-filter_index_improvement.py >}}
+```
+:::
+
+Internally,
+we've made a few key implementation decisions:
+
+1. Track the row index label
+2. Compute and use a `pandas.Index` for the dataframe filter
+
+We've also left a few placeholders to help scale the application:
+
+1. Store the data as a `@reactive.calc`, `df_tips()`
+2. Loop through all the filters to track the `.intersection()`
+
+In the next part,
+we'll add more filter components to the app and see what complexities
+arise when we work with more data types.
