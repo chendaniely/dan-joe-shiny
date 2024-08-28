@@ -286,7 +286,6 @@ We are expecting an `index` value,
 the initial `idx` variable is stored as a `set` so we can run `.intersection()`,
 but the return type is a `list`.
 
-
 :::{callout-note}
 The way `filter_idx()` was implemented wasn't written this way for
 pedagogical purposes.
@@ -306,11 +305,6 @@ This means we can implement `filter_idx()` using only index objects.
 Do not change the data type of your variables during an implementation.
 :::
 
-## Final Initial Prototype
-
-Here's our final initial application prototype,
-it has a few filters, and displays a filtered dataframe.
-
 :::{.column-screen-inset}
 ```{shinylive-python}
 #| standalone: true
@@ -320,6 +314,29 @@ it has a few filters, and displays a filtered dataframe.
 {{< include ../../app/app-010-040-filter_index_improvement.py >}}
 ```
 :::
+
+
+Since we made the mistake of mixing and converting data types,
+we can use Python type hints to make it clear to others
+what is happening with the data types,
+and also as a cue to ourself if we end up using types that we do not expect.
+
+:::{.column-screen-inset}
+```{shinylive-python}
+#| standalone: true
+#| components: [editor, viewer]
+#| viewerHeight: 650
+
+{{< include ../../app/app-010-050-type_hints.py >}}
+```
+:::
+
+
+## Final Initial Prototype
+
+Our final application is fairly simple,
+a couple of filter components that reactively subset a dataframe that gets
+shown in the app.
 
 Internally,
 we've made a few key implementation decisions:
@@ -331,6 +348,11 @@ We've also left a few placeholders to help scale the application:
 
 1. Store the data as a `@reactive.calc`, `df_tips()`
 2. Loop through all the filters to track the `.intersection()`
+
+And saw how to watch out for certain code patters to avoid:
+
+1. Changing data types of a variable in a function
+2. Changing the expected return type of a variable
 
 In the next part,
 we'll add more filter components to the app and see what complexities
