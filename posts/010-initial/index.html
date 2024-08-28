@@ -429,7 +429,7 @@ Things to fix
 <section id="test-the-concept" class="level3">
 <h3 class="anchored" data-anchor-id="test-the-concept">Test the Concept</h3>
 <p>We want to capture the index of the rows that match the filter, but when we are doing our final subsetting, we want to filter based on the <code>.loc[]</code> not <code>.iloc[]</code>. This will make sure as we make successive filters, and if the data gets scrambled, we are still pulling the correct row by the “row name” identifier.</p>
-<div id="e7f50d36" class="cell" data-execution_count="2">
+<div id="4196a09a" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>df.sample(frac<span class="op">=</span><span class="dv">1</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <div>
@@ -555,11 +555,11 @@ Things to fix
 </div>
 </div>
 </div>
-<div id="239d3bcc" class="cell" data-execution_count="3">
+<div id="821d57aa" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>idx <span class="op">=</span> [<span class="dv">6</span>, <span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">9</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>If we look at the index values from <code>.loc[]</code>, it matches the indices we want to keep.</p>
-<div id="629a9ce2" class="cell" data-execution_count="4">
+<div id="ced7d97a" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df.sample(frac<span class="op">=</span><span class="dv">1</span>, random_state<span class="op">=</span><span class="dv">42</span>).loc[idx]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="4">
 <div>
@@ -626,7 +626,7 @@ Things to fix
 </div>
 </div>
 <p>If we use <code>.iloc[]</code> we won’t filter the rows we want. We can potentially even run into an out of bounds index with <code>.iloc[]</code>.</p>
-<div id="06e1dc10" class="cell" data-execution_count="5">
+<div id="4458891a" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>df.sample(frac<span class="op">=</span><span class="dv">1</span>, random_state<span class="op">=</span><span class="dv">42</span>).iloc[idx]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="5">
 <div>
@@ -710,7 +710,7 @@ A good idea
 <section id="filter-based-on-index-label" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="filter-based-on-index-label">Filter Based on Index Label</h2>
 <p>One of the other benefits of tracking the index for filtering is we do not need to filter out data with the dataframe boolean bitwise filtering with <code>.loc[]</code> and <code>&amp;</code>. At the point of filtering, we can just use the list of index values.</p>
-<div id="efb8df11" class="cell" data-execution_count="6">
+<div id="abad33a9" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>df.loc[(df.time.isin([<span class="st">"Dinner"</span>])) <span class="op">&amp;</span> (df[<span class="st">'size'</span>].isin([<span class="dv">4</span>]))]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="6">
 <div>
@@ -757,7 +757,7 @@ A good idea
 </div>
 </div>
 <p>If we can create just the container of index values, the code at the point of filtering would look much simpler. We would only need to track the row index labels when subsetting the final dataframe, and the logic for how the index values were generated can be abstracted away. This potentially opens us up for the ability to do any more complex filtering later on since only need to provide a list of index labels.</p>
-<div id="0379977d" class="cell" data-execution_count="7">
+<div id="e3e07bd8" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>idx <span class="op">=</span> [<span class="dv">5</span>, <span class="dv">7</span>] <span class="co"># creating this can be as complex as we need</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>df.loc[idx]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="7">
@@ -919,7 +919,7 @@ app = App(app_ui, server)
 </code></pre>
 </div>
 </section>
-<section id="iterative-improvement" class="level3">
+<section id="iterative-improvement" class="level3 page-columns page-full">
 <h3 class="anchored" data-anchor-id="iterative-improvement">Iterative Improvement</h3>
 <p>Now that we’ve modified the current code to roughly the parts we want, let’s make a few code improvements.</p>
 <p>First, our new <code>filter_idx()</code> <code>@reactive.calc</code> still relies on a series of <code>if</code> statements. We want to eventually perform filters across all or an arbitrary number of columns and filter components, so we’d want to do the same <code>if</code> logic in a <code>for</code> loop. We will need to track the column name as well as the filter id used by Shiny.</p>
@@ -941,11 +941,6 @@ A good idea
 <p>Do not change the data type of your variables during an implementation.</p>
 </div>
 </div>
-</section>
-</section>
-<section id="final-initial-prototype" class="level2 page-columns page-full">
-<h2 class="anchored" data-anchor-id="final-initial-prototype">Final Initial Prototype</h2>
-<p>Here’s our final initial application prototype, it has a few filters, and displays a filtered dataframe.</p>
 <div class="column-screen-inset">
 <pre class="shinylive-python" data-engine="python"><code>#| standalone: true
 #| components: [editor, viewer]
@@ -975,7 +970,7 @@ def server(input, output, session):
                 current_idx = df.loc[df[col].isin(input[fltr]())].index
                 idx = idx.intersection(current_idx)
 
-        return list(idx)
+        return idx
 
 
     # filtered dataframe from filters
@@ -1053,6 +1048,119 @@ def server(input, output, session):
 app = App(app_ui, server)
 </code></pre>
 </div>
+<p>Since we made the mistake of mixing and converting data types, we can use Python type hints to make it clear to others what is happening with the data types, and also as a cue to ourself if we end up using types that we do not expect.</p>
+<div class="column-screen-inset">
+<pre class="shinylive-python" data-engine="python"><code>#| standalone: true
+#| components: [editor, viewer]
+#| viewerHeight: 650
+
+import pandas as pd
+from shiny import App, render, reactive, ui
+
+app_ui = ui.page_fixed(
+    ui.output_ui("table_day_filter"),
+    ui.output_ui("table_time_filter"),
+    ui.output_data_frame("render_df"),
+)
+
+def server(input, output, session):
+
+    @reactive.calc
+    def filter_idx() -&gt; pd.Index:
+        df = df_tips()
+        idx = df.index
+
+        filters = ["filter_day", "filter_time"]
+        cols = ["day", "time"]
+
+        for fltr, col in zip(filters, cols):
+            if input[fltr]():
+                current_idx = df.loc[df[col].isin(input[fltr]())].index
+                idx = idx.intersection(current_idx)
+
+        return idx
+
+
+    # filtered dataframe from filters
+    @reactive.calc
+    def data_filtered() -&gt; pd.DataFrame:
+        df = df_tips().loc[filter_idx()]
+        return df
+
+    # dataframe to view in app
+    @render.data_frame
+    def render_df():
+        return render.DataGrid(data_filtered())
+
+    # table day filter
+    @render.ui
+    def table_day_filter():
+        return ui.input_selectize(
+            "filter_day",
+            "table day filter:",
+            df_tips()["day"].unique().tolist(),
+            multiple=True,
+            remove_button=True,
+            options={"plugins": ["clear_button"]},
+        )
+
+    # table time filter
+    @render.ui
+    def table_time_filter():
+        return ui.input_selectize(
+            "filter_time",
+            "table time filter:",
+            df_tips()["time"].unique().tolist(),
+            multiple=True,
+            remove_button=True,
+            options={"plugins": ["clear_button"]},
+        )
+
+    # placeholder for joined dataframe
+    @reactive.calc
+    def df_tips():
+        # fmt: off
+        data = {
+            'total_bill': [
+                16.99, 10.34, 21.01, 23.68, 24.59,
+                25.29, 8.77, 26.88, 15.04, 14.78
+            ],
+            'tip': [
+                1.01, 1.66, 3.50, 3.31, 3.61,
+                4.71, 2.00, 3.12, 3.52, 3.00
+            ],
+            'sex': [
+                'Female', 'Male', 'Male', 'Male', 'Female',
+                'Male', 'Male', 'Male', 'Male', 'Female'
+            ],
+            'smoker': [
+                'No', 'No', 'No', 'No', 'Yes',
+                'No', 'No', 'Yes', 'No', 'Yes'
+            ],
+            'day': [
+                'Sun', 'Fri', 'Sun', 'Thu', 'Sun',
+                'Sun', 'Sat', 'Sat', 'Sat', 'Sat'
+            ],
+            'time': [
+                'Dinner', 'Dinner', 'Lunch', 'Dinner', 'Lunch',
+                'Dinner', 'Lunch', 'Dinner', 'Lunch', 'Dinner'
+            ],
+            'size': [2, 3, 3, 2, 4, 4, 2, 4, 2, 2]
+        }
+        # fmt: on
+
+        df = pd.DataFrame(data)
+        return df
+
+
+app = App(app_ui, server)
+</code></pre>
+</div>
+</section>
+</section>
+<section id="final-initial-prototype" class="level2">
+<h2 class="anchored" data-anchor-id="final-initial-prototype">Final Initial Prototype</h2>
+<p>Our final application is fairly simple, a couple of filter components that reactively subset a dataframe that gets shown in the app.</p>
 <p>Internally, we’ve made a few key implementation decisions:</p>
 <ol type="1">
 <li>Track the row index label</li>
@@ -1062,6 +1170,11 @@ app = App(app_ui, server)
 <ol type="1">
 <li>Store the data as a <code>@reactive.calc</code>, <code>df_tips()</code></li>
 <li>Loop through all the filters to track the <code>.intersection()</code></li>
+</ol>
+<p>And saw how to watch out for certain code patters to avoid:</p>
+<ol type="1">
+<li>Changing data types of a variable in a function</li>
+<li>Changing the expected return type of a variable</li>
 </ol>
 <p>In the next part, we’ll add more filter components to the app and see what complexities arise when we work with more data types.</p>
 
