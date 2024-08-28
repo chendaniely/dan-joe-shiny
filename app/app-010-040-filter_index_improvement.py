@@ -22,7 +22,7 @@ def server(input, output, session):
                 current_idx = df.loc[df[col].isin(input[fltr]())].index
                 idx = idx.intersection(current_idx)
 
-        return list(idx)
+        return idx
 
 
     # filtered dataframe from filters
