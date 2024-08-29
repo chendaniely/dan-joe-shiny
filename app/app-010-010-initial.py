@@ -2,38 +2,38 @@ import pandas as pd
 from shiny import App, render, reactive, ui
 
 app_ui = ui.page_fixed(
-    ui.output_ui("table_day_filter"),
+    ui.output_ui("table_day_filter"), #<<
     ui.output_data_frame("render_df"),
 )
 
 def server(input, output, session):
 
-    # filtered dataframe from filters
-    @reactive.calc
-    def data_filtered():
-        df = df_tips()
+    # filtered dataframe from filters #<<
+    @reactive.calc #<<
+    def data_filtered(): #<<
+        df = df_tips() #<<
 
-        if input.filter_day():
-            df = df.loc[df["day"].isin(input.filter_day())]
+        if input.filter_day(): #<<
+            df = df.loc[df["day"].isin(input.filter_day())] #<<
 
-        return df
+        return df #<<
 
     # dataframe to view in app
     @render.data_frame
     def render_df():
         return render.DataGrid(data_filtered())
 
-    # table day filter
-    @render.ui
-    def table_day_filter():
-        return ui.input_selectize(
-            "filter_day",
-            "table day filter:",
-            df_tips()["day"].unique().tolist(),
-            multiple=True,
-            remove_button=True,
-            options={"plugins": ["clear_button"]},
-        )
+    # table day filter #<<
+    @render.ui #<<
+    def table_day_filter(): #<<
+        return ui.input_selectize( #<<
+            "filter_day", #<<
+            "table day filter:", #<<
+            df_tips()["day"].unique().tolist(), #<<
+            multiple=True, #<<
+            remove_button=True, #<<
+            options={"plugins": ["clear_button"]}, #<<
+        ) #<<
 
     # placeholder for joined dataframe
     @reactive.calc

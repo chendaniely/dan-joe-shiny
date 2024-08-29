@@ -9,29 +9,29 @@ app_ui = ui.page_fixed(
 
 def server(input, output, session):
 
-    @reactive.calc
-    def filter_idx():
-        df = df_tips()
-        idx = set(df.index)
+    @reactive.calc #<<
+    def filter_idx(): #<<
+        df = df_tips() #<<
+        idx = set(df.index) #<<
 
-        if input.filter_day():
-            current_idx = df.loc[df["day"].isin(input.filter_day())].index
-            idx = idx.intersection(set(current_idx))
+        if input.filter_day(): #<<
+            current_idx = df.loc[df["day"].isin(input.filter_day())].index #<<
+            idx = idx.intersection(set(current_idx)) #<<
 
-        if input.filter_time():
-            current_idx = df.loc[df["time"].isin(input.filter_time())].index
-            idx = idx.intersection(set(current_idx))
+        if input.filter_time(): #<<
+            current_idx = df.loc[df["time"].isin(input.filter_time())].index #<<
+            idx = idx.intersection(set(current_idx)) #<<
 
-        # convert to list because you get this error
-        # when passing into .loc[]
-        # TypeError: Passing a set as an indexer is not supported. Use a list instead.
-        return list(idx)
+        # convert to list because you get this error #<<
+        # when passing into .loc[] #<<
+        # TypeError: Passing a set as an indexer is not supported. Use a list instead. #<<
+        return list(idx) #<<
 
 
     # filtered dataframe from filters
     @reactive.calc
     def data_filtered():
-        df = df_tips().loc[filter_idx()]
+        df = df_tips().loc[filter_idx()] #<<
         return df
 
     # dataframe to view in app

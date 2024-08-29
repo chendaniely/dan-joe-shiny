@@ -14,11 +14,11 @@ def server(input, output, session):
     def data_filtered():
         df = df_tips()
 
-        if input.filter_day():
-            df = df.loc[df["day"].isin(input.filter_day())]
+        if input.filter_day(): #<<
+            df = df.loc[df["day"].isin(input.filter_day())] #<<
 
-        if input.filter_time():
-            df = df.loc[df["time"].isin(input.filter_time())]
+        if input.filter_time(): #<<
+            df = df.loc[df["time"].isin(input.filter_time())] #<<
 
         return df
 

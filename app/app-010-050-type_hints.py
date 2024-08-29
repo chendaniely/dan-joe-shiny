@@ -10,7 +10,7 @@ app_ui = ui.page_fixed(
 def server(input, output, session):
 
     @reactive.calc
-    def filter_idx() -> pd.Index:
+    def filter_idx() -> pd.Index: #<<
         df = df_tips()
         idx = df.index
 
@@ -27,7 +27,7 @@ def server(input, output, session):
 
     # filtered dataframe from filters
     @reactive.calc
-    def data_filtered() -> pd.DataFrame:
+    def data_filtered() -> pd.DataFrame: #<<
         df = df_tips().loc[filter_idx()]
         return df
 

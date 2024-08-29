@@ -14,15 +14,15 @@ def server(input, output, session):
         df = df_tips()
         idx = df.index
 
-        filters = ["filter_day", "filter_time"]
-        cols = ["day", "time"]
+        filters = ["filter_day", "filter_time"] #<<
+        cols = ["day", "time"] #<<
 
-        for fltr, col in zip(filters, cols):
-            if input[fltr]():
-                current_idx = df.loc[df[col].isin(input[fltr]())].index
-                idx = idx.intersection(current_idx)
+        for fltr, col in zip(filters, cols): #<<
+            if input[fltr](): #<<
+                current_idx = df.loc[df[col].isin(input[fltr]())].index #<<
+                idx = idx.intersection(current_idx) #<<
 
-        return idx
+        return idx #<<
 
 
     # filtered dataframe from filters
