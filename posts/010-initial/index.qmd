@@ -6,6 +6,8 @@ author: "Daniel Chen"
 format: html
 filters:
   - shinylive
+  - quarto
+  - line-highlight
 ---
 
 ```{python}

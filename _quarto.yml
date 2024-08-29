@@ -17,6 +17,8 @@ format:
 
 filters:
   - shinylive
+  - quarto
+  - line-highlight
 
 editor:
   render-on-save: true
