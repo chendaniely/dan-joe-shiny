@@ -1,5 +1,6 @@
 ---
-title: "Tips for Making a Shiny for Python Module"
+title: "Tips for Implementing Custom Features into Shiny"
+subtitle: "Creating and Testing Your Shiny Modules"
 author: "Daniel Chen"
 
 format: html
