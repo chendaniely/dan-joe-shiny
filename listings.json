@@ -2,6 +2,8 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/020-010-adaptive_filters/index.html",
+      "/posts/030-010-what_i_learned/index.html",
       "/posts/010-initial/index.html"
     ]
   }

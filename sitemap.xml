@@ -1,15 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://chendaniely.github.io/dan-joe-shiny/posts/010-initial/index.html</loc>
-    <lastmod>2024-08-29T03:18:00.713Z</lastmod>
+    <loc>https://chendaniely.github.io/dan-joe-shiny/about.html</loc>
+    <lastmod>2024-09-30T05:41:19.042Z</lastmod>
   </url>
   <url>
-    <loc>https://chendaniely.github.io/dan-joe-shiny/about.html</loc>
-    <lastmod>2024-08-29T03:18:00.713Z</lastmod>
+    <loc>https://chendaniely.github.io/dan-joe-shiny/posts/030-010-what_i_learned/index.html</loc>
+    <lastmod>2024-09-30T05:41:19.043Z</lastmod>
   </url>
   <url>
     <loc>https://chendaniely.github.io/dan-joe-shiny/index.html</loc>
-    <lastmod>2024-08-29T03:18:00.713Z</lastmod>
+    <lastmod>2024-09-30T05:41:19.043Z</lastmod>
+  </url>
+  <url>
+    <loc>https://chendaniely.github.io/dan-joe-shiny/posts/020-010-adaptive_filters/index.html</loc>
+    <lastmod>2024-09-30T05:41:19.043Z</lastmod>
+  </url>
+  <url>
+    <loc>https://chendaniely.github.io/dan-joe-shiny/posts/010-initial/index.html</loc>
+    <lastmod>2024-09-30T05:41:19.043Z</lastmod>
   </url>
 </urlset>
