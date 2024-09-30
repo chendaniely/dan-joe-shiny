@@ -4,6 +4,8 @@ shiny
 ipykernel
 shinylive
 pandas
-pyyaml
+pandas-stubs
 jupyter
 seaborn
+PyYAML
+shiny_adaptive_filter

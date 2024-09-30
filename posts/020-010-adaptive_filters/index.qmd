@@ -1,0 +1,181 @@
+---
+title: "Introducing Adaptive Filters"
+subtitle: "A betty way to filter your data in shiny"
+author: "Daniel Chen"
+
+format: html
+filters:
+  - shinylive
+  - quarto
+  - line-highlight
+
+jupyter: python3
+---
+
+One of the main limitations when trying to use Shiny components to filter a dataframe
+is the filters mainly work in an `and` operator on the data.
+This means that when you are trying to use interactively explore your data,
+you will inevitably end up selecting a combination of filter values
+that will return an empty dataframe.
+
+We have created a new set of shiny selectize and checkbox filters to help you with
+these kinds of interactive data filtering tasks.
+
+```bash
+pip install adaptive_filter
+```
+
+Take a look at an example application using the new filters.
+
+---
+
+## The Problem
+
+<!-- BREAK -->
+
+Imagine this small tips dataset
+
+```{python}
+#| code-fold: true
+
+import pandas as pd
+
+data = {
+    'total_bill': [16.99, 10.34, 21.01, 23.68, 24.59],
+    'tip': [1.01, 1.66, 3.50, 3.31, 3.61],
+    'sex': ['Female', 'Male', 'Male', 'Male', 'Female'],
+    'smoker': ['No', 'No', 'No', 'No', 'Yes'],
+    'day': ['Sun', 'Sun', 'Sun', 'Fri', 'Sun'],
+    'time': ['Lunch', 'Dinner', 'Dinner', 'Dinner', 'Dinner'],
+    'size': [2, 3, 3, 2, 4]
+}
+
+tips = pd.DataFrame(data)
+tips
+```
+
+In shiny, you will typically create separate input components for each column
+you want the user to interact with and filter down the data.
+If we made filters for all the categorical variables and wanted to filter the
+`day` variable down to `Fri`.
+
+```{python}
+#| code-fold: true
+
+tips.loc[tips["day"] == "Fri"]
+```
+
+Traditionally, your filter components will still have options for
+the entire dataframe,
+it does not react to the filters you already selected.
+In a traditional shiny application,
+you will still see `Lunch` in the `time` filter.
+This means the user can still select `Fri` and subsequently,
+`Lunch` and be left with an empty dataframe result.
+
+```{python}
+#| code-fold: true
+
+tips.loc[(tips["day"] == "Fri") & (tips["time"] == "Lunch")]
+```
+
+<br />
+
+This empty dataframe result may not be what you want the end user to see.
+
+Here's an example of the behaviour in a simple app.
+
+:::{.column-screen-inset}
+```{shinylive-python}
+#| standalone: true
+#| components: [editor, viewer]
+#| viewerHeight: 700
+
+{{< include ../../app-adaptive_filters/app-0010-010-2_filters.py >}}
+```
+:::
+
+## Adaptive Filters
+
+The new adaptive filters change updates the values of the
+inputs so it "adapts" to all the filtering that is done to your data,
+while keeping the results for values you have already selected.
+We think this provides a better user experience when
+exploring data interactively.
+
+### Installing and Usage
+
+You can give the new components a try.
+
+```bash
+pip install adaptive_filter # TODO: check final name
+```
+
+To use the components you will need to import the shiny module
+
+```python
+from shiny_adaptive_filter import adaptive_filter_module
+```
+
+You then pass the module id and data into the server module,
+and then place the UI where you want with the ui module.
+
+```python
+# in the UI
+adaptive_filter_module.filter_ui("adaptive")
+
+# in the server function
+adaptive_filters = adaptive_filter_module.filter_server(
+        "adaptive",
+        df=tips_original,
+    )
+```
+The module returns an index of values that the application author
+can use to filter their data in a `@reactive.calc`
+
+```python
+adaptive_filters_idx = adaptive_filters["filter_idx"]
+```
+
+:::{.column-screen-inset}
+```{shinylive-python}
+#| standalone: true
+#| components: [editor, viewer]
+#| viewerHeight: 700
+
+{{< include ../../app-adaptive_filters/app-0010-020-adaptive_simple.py >}}
+
+## file: requirements.txt
+shiny_adaptive_filter
+
+```
+:::
+
+
+
+#### Overrides
+
+By default,
+the module will try to create an adaptive filter for _all_ the columns in your data.
+It tries to make sensible defaults for the kind of component you want.
+However, you can change (i.e., override) any of the default behaviours.
+
+There are 3 (3) kinds of overrides you can provide.
+
+1. Change the filter type
+2. Disable a filter
+3. Change the filter label
+
+We do this by creating a python dictionary where keys are the
+column names of the incoming dataframe that we want to target.
+
+We can turn "off" a filter by passing in `None` as the value.
+To change the filter type, we can pass in the filter constructor.
+If you want to change the filter label, pass in a string of the new label.
+
+```python
+override = {
+    "total_bill": None, # disable the total_bill column
+
+}
+```

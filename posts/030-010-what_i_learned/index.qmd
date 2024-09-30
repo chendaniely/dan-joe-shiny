@@ -1,0 +1,863 @@
+---
+title: "Tips for Making a Shiny for Python Module"
+author: "Daniel Chen"
+
+format: html
+filters:
+  - shinylive
+  - quarto
+  - line-highlight
+
+jupyter: python3
+editor:
+  render-on-save: true
+---
+
+<!--
+Who is this for?
+why do they care?
+-->
+
+Earlier this year, I wanted to create a data explorer app using Shiny for Python.
+It is the kind of application you see a lot on government data portals.
+You have a few visualizations about the data,
+look at data raw data set,
+apply filters to subset the data set,
+and be able to download the final data set so you can use it locally.
+
+I created the application that automatically creates a filter for all the columns
+in a data frame and provides an interface for a user to explore different
+subsets of the data and allows them to download the final dataset.
+
+Here's a few tips I learned through the process if you want to
+build your own custom features into Shiny.
+
+1. Keep variable types consistent
+2. Use Python type hints
+3. Know When You Should Use Shiny Modules
+4. Make your shiny app testable
+5. Think about the developer experience
+
+<hr>
+<!-- BREAK -->
+<hr>
+
+## Background
+
+One part that always bothered me when using components to interactively filter a data set was that,
+nothing prompted me about which filter options were valid as I was interacting with the application.
+I would frequently end up choosing a combination of filters that would return an empty dataframe.
+Clicking around and not knowing you would end up with an empty dataframe was a bit jarring.
+A big chunk of my interface would _just disappear_.
+
+The current set of shiny filters and the way most shiny apps are written
+have all the filtering components `and` each other to filter the data.
+This is why it will return an empty dataframe.
+
+What I wanted were filters that were aware of what the other filters were doing,
+and update their own values that _adapts_ to the other filters.
+There was no way to do this in Shiny for Python out-of-the box,
+so I had to go and implement the feature on my own,
+and hopefully be able to share it with everyone else.
+
+<!--
+Don't think i need this section anymore
+### Implementation
+
+There will be another post about the actual adaptive filters,
+its implementation,
+and usage,
+but for now, here are the two main ideas of what
+
+1. We tracked which index values (`df.index`) matched each filter and used
+   that index of values to subset the data (`df.loc[filter_index]`).
+   Once we calculated the correct index values we needed across all the filters,
+   we could use those values to filter our data,
+   and abstract away the implementation details on how the correct index was calculated
+   and how the filters will behave.
+2. We would want all filters to have this adaptive behavior
+-->
+
+## Tip 1: Keep Variable Types Consistent
+
+<!--
+Goal is to show that I too can make bad programming decisions
+and also follow iterative improvements as I write code.
+
+The goal is overtime, you will have to do these kinds of
+re-writes less because you can naturally do the correct thing
+right away
+-->
+
+As a data scientist,
+we typically write code in some kind of pipeline.
+So, we end up making sequential modifications to a variable.
+My advice, do not reuse the same variable names,
+especially if you are going to be changing the variable's type throughout the code.
+It adds to cognitive load when trying to understand the implementation
+and also makes it a bit harder to reason about during maintenance.
+
+#### Example
+
+<!--
+When you write your own functions,
+sometimes the data type that is the input of your function
+is not entirely in you control.
+You just need to deal with what the rest of the program is using.
+-->
+
+
+```{python}
+#| include: false
+from shiny import reactive
+```
+<!--
+We know that some form of `and`-ing the filter values will be needed
+in this process.
+This behavior is an _intersection_ of all the indices from
+each of the filters.
+
+Here's the actual code snippet I wrote to get the process working.
+-->
+
+Here's an actual example of the code I wrote that illustrates this point.
+I want to take the intersection of data frame index values
+so I can get a final index of values I can use to subset my dataframe
+that represents the choices the user selected in my filter components.
+
+The function does these steps
+
+1. Get the dataframe
+2. Get the index of the dataframe
+3. Convert the index to a `set`
+4. Perform the set intersection
+5. Return a `list` of the values
+
+```{python}
+@reactive.calc
+def filter_idx():
+    df = df_tips() # <<
+    idx = set(df.index) # <<
+
+    if input.filter_day():
+        current_idx = df.loc[df["day"].isin(input.filter_day())].index
+        idx = idx.intersection(set(current_idx)) # <<
+
+    if input.filter_time():
+        current_idx = df.loc[df["time"].isin(input.filter_time())].index
+        idx = idx.intersection(set(current_idx)) # <<
+
+    return list(idx) # list because .loc[] would return TypeError# <<
+```
+
+<!--
+My thought process at the time was
+python `lists` do not have a way to find the intersection
+of each other without writing a loop or comprehension,
+but `set` objects do have an `.intersection()` method.
+We could have sets do all the index calculation for us and return that
+for the rest of the application.
+
+
+
+Other than the first step of getting the dataframe,
+all the other steps involve the variable we need for the final
+return value.
+-->
+
+The `idx` variable undergoes 3 type changes, `index`, `set`, and `list`!
+
+<!--
+We had to convert to a list because we would get a `TypeError`
+when trying to filter using a `set`.
+
+```python
+TypeError: Passing a set as an indexer is not supported. Use a list instead.
+```
+
+::: {.callout}
+> There must be a better way!
+> - Raymond Hettinger
+:::
+-->
+
+If you just plan to use this function (technically a `@reactive.calc`),
+you would only care that it returns something that you can use
+to subset a dataframe with.
+That's the benefit of abstraction,
+but as someone who will maintain the code base,
+and in my case pair-programming,
+it makes the _implementation_ extremely hard to follow.
+
+Turns out pandas `Index` objects,
+have an `.intersection()` method.
+So, no reason to convert to a `set` and we can
+implement everything we need with the same data type.
+
+```{python}
+@reactive.calc
+@reactive.calc
+def filter_idx():
+    df = df_tips() # <<
+    idx = df.index # <<
+
+    if input.filter_day():
+        current_idx = df.loc[df["day"].isin(input.filter_day())].index
+        idx = idx.intersection(current_idx) # <<
+
+    if input.filter_time():
+        current_idx = df.loc[df["time"].isin(input.filter_time())].index
+        idx = idx.intersection(current_idx) # <<
+
+    return idx # <<
+```
+
+Much better! No more getting values of one type, and doing inline type conversions
+to make a calculation and returning an entirely different type.
+This makes the implementation much easier to reason with,
+and if you're skimming the code to track a bug,
+you won't miss the `set()` and `list()` calls.
+
+## Tip 2: Use Python Type Hints
+
+[Python Type hints](https://docs.python.org/3/library/typing.html)
+are a way where you can quickly see what datatype you are working with.
+Especially when your code base is a bit larger and you need to know what
+the inputs and outputs of a function are.
+
+You won't need to rely on duck typing and "hope for the best".
+Your intensions are clear.
+The problem I encountered from the previous issue,
+can be mitigated by writing the code better,
+but adding type hints can help with larger code bases when you are
+working with different types.
+
+Python is a dynamically typed language,
+variables do not need explicit type declarations.
+This is where Python's "duck typing" comes from,
+and is what makes python flexible as a scripting language,
+but can make it more difficult to understand and maintain
+in larger projects.
+
+Python
+type hints were introduced in
+[PEP 484](https://peps.python.org/pep-0484/)
+and implemented in Python 3.5.
+They help address duck typing ambiguity with type annotations.
+Type hints specify the expected types for variables, function arguments, and return values.
+Type hints don’t enforce types at runtime (you can even put in incorrect types).
+They can serve as documentation,
+improve code readability,
+and enable tools to catch type-related errors.
+
+### Pyright
+
+[Pyright](https://microsoft.github.io/pyright/)
+and
+[Mypy](https://mypy-lang.org/)
+are two of the more popular static type checkers for Python.
+The Shiny team uses Pyright in `strict` mode in their code base.
+Sometimes you need to go out of your way to make
+the type checker happy.
+But, the benefit is you get complete type safety
+and will see warnings as you work.
+This makes your code much easier to maintain,
+bring on new people, and reason with as your are working
+on different parts of the codebase.
+
+#### Examples
+
+Here are 2 different examples of basic type hints in Python
+
+##### Warns You About Variable Redeclaration
+
+If you end up completely redefining
+the type of a variable with the same name
+(not exactly the same situation from Tip 1),
+you will get a `reportRedeclaration` message
+from the type checker.
+
+```{python}
+from __future__ import annotations
+
+import pandas as pd
+
+idx_int: pd.Index[Any] = pd.Index([1, 2, 3]) # reportRedeclaration here
+idx_int: pd.Index[int] = pd.Index([1, 2, 3])
+```
+
+You may need the `from __future__ import annotations` at the top of your python file.
+This allows type hints to be stored as strings rather than immediately being evaluated.
+Without it, you may get a `TypeError`,
+in this specific example,
+you would can get a `TypeError: type 'Index' is not subscriptable` message.
+
+##### Turn Off Specific Warnings
+
+Sometimes things are out of your control,
+and you will manually need to turn off a warning.
+One example comes from `pandas`,
+where I used their functions to determine the `dtype` of a `Series`.
+
+```python
+from pandas.api.types import is_numeric_dtype, is_string_dtype
+```
+
+Pyright reports a `reportUnknownVariableType` error,
+and there is not much I can do to fix this error without
+making a change to the main `pandas` library, or
+[pandas-stubs](https://pypi.org/project/pandas-stubs/).
+
+Pyright 1.1.229+ supports suppressing individual diagnostics
+
+```python
+# pyright: ignore [reportUnknownVariableType]
+```
+### Cast
+
+The `cast()` function is used when you know (or assume) that a variable is of a specific type,
+even if Python or a static type checker might not infer it directly.
+You do need to be careful when using `cast()`,
+since you are intensionally making an assumption about the variable type,
+and if you get it wrong, it would be difficult to track down the bug.
+
+#### Example
+
+One example that was used in the `adaptive_filter` codebase was telling Pyright
+the type of data stored in the dataframe index.
+We used a function to return the index of a dataframe to make sure the type checker
+understands the data type stored.
+
+```{python}
+from typing import Any, cast
+
+def return_index(df: pd.DataFrame) -> "pd.Index[Any]":
+    return cast("pd.Index[Any]", df.index)
+```
+
+Now anywhere we would normally call `df.index` we would now call `return_index(df)`
+
+### TypeVar and Generics
+
+`TypeVar` and `Generic`s are tools in the python typing system
+that allows you to create more flexible (i.e., "generic")
+type hints where you can put in a placeholder for a types
+and delay specifying the actual type later on,
+while still maintaining type safety.
+
+If you are familiar with object oriented programming (OOP),
+inheriting objects from a common base class,
+or abstract base class (`abc`),
+then `TypeVar` and `Generic`s are how you will add type hints to your
+base class.
+
+#### Example
+
+In our adaptive filter module,
+we had an `abc` for a `BaseFilter` class,
+One of the methods in the `abc` returns needs to return values
+from a filter component, but depending on the data stored in the filter,
+it may return values as a `str` or `int`.
+
+```python
+from abc import ABC
+from typing import TypeVar, Generic, Iterable
+
+T = TypeVar("T")
+
+
+class BaseFilter(ABC, Generic[T]):
+    ...
+
+    def _get_input_value(self) -> Iterable[T] | None:
+        ...
+```
+
+When we go implement each object that inherits from `BaseFilter`,
+we can pass in the actual type that `T` was used as a placeholder.
+
+```python
+# class that can deal with categorical variables stored as a string
+class FilterCatStringSelect(BaseFilter[str]):
+    ...
+```
+
+
+## Tip 3: Know When You Should Use Shiny Modules
+
+[Shiny modules](https://shiny.posit.co/py/docs/modules.html)
+are used to follow the DRY (Don't Repeat Yourself) principle.
+The same concept of creating functions so you can abstract away and reuse computations,
+is a similar concept of shiny modules.
+The term "module" in Python typically refers to a `.py` file
+that contains python functions that get imported into a file.
+While "shiny modules" are typically `.py` files that get imported into
+the app,
+the term "shiny module" is not synonymous with a regular "module".
+"Shiny modules" are specifically used in a shiny for Python application
+to encapsulate reactive components in a namespace to avoid
+namespace clashing of the component `id` because
+each component in shiny **must** have a unique `id`.
+
+Writing functions isn't the only way you can reduce repeated code.
+`for` loops are another common way to write code to reuse a common
+code base for repeated actions.
+So how do you know when you need to refactor your code into shiny modules?
+What "code smells" should you look out for?
+
+### Tracking List(s) of Component Values
+
+If you find yourself in any of the following situations,
+you may want to think about refactoring your code into a shiny module.
+
+- Calling the same component creating function multiple times.
+- Creating a list of `id` values and iterating over and calling a function that makes a component.
+- Creating at least 2 lists that track the `id` and some other input for the component.
+    - For example a separate list for the `id` or `label`, but can also
+      include things like a column name of a dataframe.
+- Iterating across lists(s) to ensure inputs are captured together
+    - Especially if you find your self using the `zip()` function
+
+#### Example
+
+In the adaptive filter module,
+the initial implementation tracked 3 things:
+`id`, column name, and type of variable stored in the column.
+
+```{python}
+filters = ["filter_size", "filter_id", "filter_total_bill"]
+cols = ["size", "id", "total_bill"]
+col_types = ["cat", "cat", "sliders"]
+
+for fltr, col, col_type in zip(filters, cols, col_types):
+    ...
+```
+
+All 3 bits of information needed to be tracked together.
+
+- `filters`: get the user inputs from the `ui`.
+- `cols`: tied to the `filters` variable,
+and used to extract the corresponding column from the data.
+- `col_type`: determine how the data needed to be filtered. For example, `selectize` components _always_ return values as a list of strings (`List[str]`), and needed to be converted to a numeric type to filter the data.
+
+From a maintenance and end user perspective,
+knowing the column name should be enough to figure out
+the rest of the parts.
+As long as your provide a way for the end user to override any default,
+the code as written forces them to manually track a lot of
+unnecessary information for their own application.
+
+### Complex and Interweaved Behaviors
+
+The previous "code smells" are listed in the
+[Shiny for Python modules documentation](https://shiny.posit.co/py/docs/modules.html),
+but there are other ways you may want to consider whether or not
+you need modules.
+
+- Dynamically creating component `id`s without fear of clashing with the main application.
+- Complex/complicated operations that are specific to a function and requires multiple other `@reactive` intermediate steps.
+- Coupling: where adding another feature into the application requires changing the codebase in many parts of the application in both the `server()` and `ui`.
+
+When you create a module,
+you specifically create a namespace for all the components inside.
+Whatever `id` names and calculations you need
+are all in their own namespace.
+
+#### Example
+
+Using the same code example from above,
+we are manually tracking 3 parts for each component.
+
+```{python}
+filters = ["filter_size", "filter_id", "filter_total_bill"]
+cols = ["size", "id", "total_bill"]
+col_types = ["cat", "cat", "sliders"]
+```
+
+If we are giving just the column name, `cols`,
+we can automatically create the `id` by prepending the `filter_` string.
+We can run into a risk that if this component was just a function,
+it will clash with an existing `id` by the end user, e.g.,
+what if they already have a `filter_size` component `id` for something else?
+If you think the answer is to add more underscores `_` to
+the `id` name, and create something like `_filter__size`,
+then you really need to encapsulate the function into a module.
+
+By default,
+we don't really need the end user to provide anything,
+just the dataframe is enough to get the `cols` value,
+from there we can generate the `filters` list,
+and we can write out own function that calculates a `col_types`.
+We talk more about user overrides in Tip 5,
+for now let's assume we only have 3 columns in our entire data set.
+All 3 of those calculations can be done in separate `@reactive` calls.
+A module will be able to abstract away all these calculations
+outside the main `app.py`,
+and make the main application easier to maintain.
+
+Finally,
+if we wanted to add another adaptive filter component into the application,
+we need to track the information in _at least_ 3 places:
+
+```python
+# in the server function of the application
+current_ids = df.loc[df[col].isin(filter_value)].index
+
+# in one of the helper functions
+if is_string_dtype(col):
+    return "cat_str"
+
+# in the server and/or ui of the application
+ui.output_ui("table_size_filter"),
+
+@render.ui
+def table_id_filter():
+    return ui.input_selectize(
+        "filter_id",
+        "id filter:",
+        sorted(df_tips()["id"].unique().tolist()),
+        multiple=True,
+        remove_button=True,
+        options={"plugins": ["clear_button"]},
+    )
+```
+
+Just needing to create a new component, or new component type
+requires the user to change the code many locations in the application.
+Forgetting to change any one of the locations is a common mistake,
+and can be easily forgotten.
+As the application grows, the places where the codebase needs
+to be updated to incorporate new features will be
+farther apart, i.e., more lines of code between needed changes.
+Creating a module can keep the **coupling** of code
+closer together,
+so making changes or extensions is easier.
+
+
+## Tip 4: Make Your Shiny App Testable
+
+Testing is always a good idea.
+When working with shiny you want to split up functions that require
+shiny end-to-end and behavior testing,
+with your main logic.
+
+Not everything needs to be in the server function,
+and not everything needs to be inside a reactive.
+You can still call regular python functions,
+so when possible,
+write regular functions and call them in a reactive.
+If you have written unit tests before or used the `assert` statement,
+then you can still write tests for your Shiny application.
+
+### Testing Functions with pytest
+
+If you are able to refactor your code into individual non-reactive functions,
+you can leverage the larger unit testing infrastructure python provides,
+e.g., [pytest](https://docs.pytest.org/en/stable/)
+This is a great general shiny tip,
+where you can and should be able to create helper functions completely outside
+of any `@reactive` context,
+and then call the function inside a `@reactive`.
+
+#### Example
+
+Here is a helper function that was used in our adaptive filters module,
+It takes in a list of pandas `Index` objects,
+and finds the `.intersection()` across all the objects.
+This calculation is used many times throughout the application.
+It also makes a few data checks beforehand (expressed by the `...` in the code below).
+
+```{python}
+def index_intersection_all(
+    to_intersect: List["pd.Index[Any] | None"],
+    default: "pd.Index[Any]",
+) -> "pd.Index[Any]":
+
+    ...
+
+    intersection = intersect[0]
+    for index in intersect:
+        intersection = intersection.intersection(index)
+
+    return intersection
+```
+
+We can test this function like a regular Python function.
+
+```{python}
+import pandas as pd
+
+idx1 = pd.Index([1, 2, 3, 4, 5])
+idx2 = pd.Index([2, 3, 4, 5, 6])
+idx3 = pd.Index([3, 4, 5, 6, 7])
+default = pd.Index([1, 2, 3, 4, 5, 6, 7])
+
+def test_index_intersection_all():
+    to_intersect = [idx1, idx2, idx3]
+    expected = pd.Index([3, 4, 5])
+    calculated = index_intersection_all(
+        to_intersect,
+        default=default,
+    )
+    assert (calculated == expected).all()
+    assert calculated.equals(expected)
+```
+
+You can then leverage all the benefits and tools from `pytest`
+in testing your shiny application and/or shiny module,
+including
+[test fixtures](https://docs.pytest.org/en/6.2.x/fixture.html).
+
+### Playwright
+
+Testing the reactivity and end-to-end behavior in Shiny for Python
+is limited to
+[Playwright](https://playwright.dev/python/).
+The Shiny for Python documentation has an article on
+[End-to-end testing](https://shiny.posit.co/py/docs/end-to-end-testing.html)
+for Shiny.
+You can run your end-to-test testing with `pytest` and `playwright` with
+
+```bash
+pip install pytest pytest-playwright
+```
+
+You are a bit limited to the capabilities of Playwright,
+but Shiny does have a few wrappers for playwright that makes it easier for you
+to test your application.
+
+First, Shiny provides you a `controller` object.
+This provides you a more convenient way of finding input or output components
+by the `id` that was used in the application.
+
+```python
+from shiny.playwright import controller
+```
+
+From there, you can use the
+[Shiny Testing API docs](https://shiny.posit.co/py/api/testing/)
+to find the corresponding component in your application that you want to test.
+For example, this is the documentation for the
+[InputSelectize playwright controller](https://shiny.posit.co/py/api/testing/playwright.controller.InputSelectize.html#shiny.playwright.controller.InputSelectize).
+
+We then create our test app and test function.
+This will run the shiny application in a single browser tab,
+and then go to the app URL.
+
+```python
+from shiny.run import ShinyAppProc
+from playwright.sync_api import Page
+from shiny.pytest import create_app_fixture
+
+app = create_app_fixture("app.py")
+
+def test_basic_app(page: Page, app: ShinyAppProc):
+    page.goto(app.url)
+    ...
+```
+
+From there we can use various `.set()`, `.expect_*()`, methods
+from the controller components to modify the application and test the results.
+
+#### Example
+
+Here's an example of a test we used in a simple adaptive filter application.
+
+```python
+from shiny.playwright import controller
+from shiny.run import ShinyAppProc
+from playwright.sync_api import Page
+from shiny.pytest import create_app_fixture
+
+app = create_app_fixture("app.py")
+
+
+def test_basic_app(page: Page, app: ShinyAppProc):
+    page.goto(app.url)
+
+    selectize_day = controller.InputSelectize(page, "adaptive-filter_day")
+    selectize_day.set("Fri")
+    selectize_day.expect_selected(["Fri"])
+
+    selectize_time = controller.InputSelectize(page, "adaptive-filter_time")
+    selectize_time.expect_choices(["Dinner"])
+```
+
+Since the adaptive filters are created within a shiny module,
+we have to be mindful of the `id` given for the module's namespace.
+The actual component will be the given `id` followed by a dash, `-`,
+then whatever `id` was used for the component inside the shiny module.
+
+For example, if we called the module with the `adaptive` `id`,
+
+```python
+filter_return = adaptive_filter_module.filter_server("adaptive", df=tips)
+```
+the component `id` of the application for the `day` column filter
+would be `adaptive-filter_day`
+because inside the module,
+our filter names use a `filter_colname` format.
+
+From there,
+we can test clicking on a day of the week using an adaptive filter,
+and checking to see if another filter's values have changed to the selection.
+
+
+## Tip 5: Think of the Developer Experience
+
+<!--
+this is a bit of an art.
+and as an educator, i sometimes feel that many python packages assume
+you know how software development and codeing working in python.
+
+this is especially the case when working with a DSL like the pydata stack.
+-->
+
+People will only use your tools if you make it easy for them to use.
+This is a bit of an art,
+and every situation is going to be different.
+
+If this is code just for yourself,
+and only you will maintain a codebase in the future,
+then the user interface does not need to be as seamless.
+If you are going to put this codebase into the hands of other people,
+and you are trying to get people to adopt your tool,
+then you do not want to put any more hurdles in their way.
+You will also need to think about the skill of the average person who may use your tool.
+
+Shiny is a tool for data scientists,
+and because of data science's popularity in the last decade,
+the training for a data scientist is not from software engineering
+and computer science.
+
+
+But when a tradeoff between
+convenience for the user,
+the future developer who will extend the library,
+yourself in the future, or
+the object oriented dogma.
+Sometimes it might be okay to sacrifice the dogma
+to make everything else convenient.
+
+<!--
+partials
+lambdas
+tweak the code
+-->
+
+#### Example
+
+The filters will try its best to use simple heuristics
+to automatically return the correct filter type based on the contents
+of the column.
+
+We ended up writing the code, so the user can provide customizations in one of 3 ways:
+
+- Remove a component with `None`
+- Specify a new label with just a string
+- Override the default calculated component type by passing the object
+- Provide a `label` parameter to a custom component type to rename the label
+
+```python
+override = {
+    "total_bill": None,
+    "day": "DAY!",
+    "time": adaptive_filter.FilterCatStringSelect(),
+    "size": adaptive_filter.FilterCatNumericCheckbox(label="Party Size"),
+}
+```
+
+All of the filters are documented in the module for the app author to look up,
+and provides an easy interface for them to use:
+the dictionary keys are the columns of the data set, and the values
+are any manual overrides the developer wants in their application.
+
+```python
+# in the ui
+adaptive_filter.filter_ui("adaptive")
+...
+
+# in the server
+adaptive_filters = adaptive_filter.filter_server(
+    "adaptive", df=data, override=override
+)
+
+# a reactive value that can be used anywhere else in the app
+adaptive_filters_idx = adaptive_filters["filter_idx"]
+```
+
+The implementation we used in adaptive filters uses an old C trick of
+having a `finish_init()` method that is run after the developer passes
+in the inputs for the constructor.
+
+```python
+
+class BaseFilter(ABC, Generic[T]):
+    def __init__(self, *, label: str | None = None):
+        ...
+
+    def finish_init(
+        self,
+        data: Callable[[], pd.DataFrame] | pd.DataFrame,
+        id: str,
+        column_name: str,
+        *,
+        session: Session | None = None,
+    ):
+        ...
+
+        return self
+```
+
+This is so the user _only_ needs to pass in the type of filter they want to override,
+or the component label that will be displayed in the application.
+This decision was made so it balances
+user convenience and developer convenience,
+but sacrifices on one of the dogmas of object oriented programming,
+where a valid object gets created,
+but still cannot be used until another method gets called.
+Anytime the filter constructor gets called with the user inputs,
+we **must** call the `.finish_init()` method to have a use able filter component object.
+
+```python
+adaptive_filter.FilterCatStringCheckbox(label=label)\
+    .finish_init(df, id, col_str, session=session)
+```
+
+## Conclusion
+
+I like to remind my student students that just because the code
+works without error, doesn't mean it's correct,
+and just because it's correct,
+doesn't mean you can't improve it.
+
+I wanted a shiny app to have filter behaviors that did not exist and
+set off creating a custom implementation to be able to share with others.
+This lead me to create custom filtering component behaviors,
+refactoring them into shiny modules,
+and creating a python package to share with others.
+Along the way I got help from Joe Cheng,
+CTO at Posit, PBC and one of the main authors of Shiny,
+who taught me how to take my original proof of concept code,
+and make it respectable from a software engineering point of view.
+Can the codebase be improved? Absolutely.
+But I hope the tips in this post can help level up your
+software engineering skills as a data scientist.
+
+Here's an example of the adaptive filters at work.
+See how the values in the other filters "adapt"
+when `Fri` is selected for the `day` filter.
+
+:::{.column-screen-inset}
+```{shinylive-python}
+#| standalone: true
+#| components: [editor, viewer]
+#| viewerHeight: 700
+
+{{< include ../../app-adaptive_filters/app-0010-020-adaptive_simple.py >}}
+
+## file: requirements.txt
+shiny_adaptive_filter
+
+```
+:::
