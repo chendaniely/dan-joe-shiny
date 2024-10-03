@@ -190,8 +190,7 @@ Who is this for?
 why do they care?
 -->
 <p>Earlier this year, I wanted to create a data explorer app using Shiny for Python. It is the kind of application you see a lot on government data portals. You have a few visualizations about the data, look at data raw data set, apply filters to subset the data set, and be able to download the final data set so you can use it locally.</p>
-<p>I created the application that automatically creates a filter for all the columns in a data frame and provides an interface for a user to explore different subsets of the data and allows them to download the final dataset.</p>
-<p>Here’s a few tips I learned through the process if you want to build your own custom features into Shiny.</p>
+<p>Shiny did not have the type of filtering behavior I wanted, so I needed to build my own. I got the opportunity to work with Joe Cheng at Posit to learn about building software and shiny modules. Here’s a few tips I learned through the process if you want to build your own custom features into Shiny.</p>
 <ol type="1">
 <li>Keep variable types consistent</li>
 <li>Use Python type hints</li>
@@ -199,6 +198,19 @@ why do they care?
 <li>Make your shiny app testable</li>
 <li>Think about the developer experience</li>
 </ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If you are new to Shiny Modules you can read about them in the <a href="https://shiny.posit.co/py/docs/modules.html">Shiny Modules</a> learning page.</p>
+</div>
+</div>
 <hr>
 <!-- BREAK -->
 <hr>
@@ -261,7 +273,7 @@ Here's the actual code snippet I wrote to get the process working.
 <li>Perform the set intersection</li>
 <li>Return a <code>list</code> of the values</li>
 </ol>
-<div id="843e444b" class="cell" data-execution_count="2">
+<div id="709f887b" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb1" data-source-line-numbers="nil" data-code-line-numbers="3,4,8,12,14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="at">@reactive.calc</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> filter_idx():</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> df_tips() </span>
@@ -306,8 +318,8 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 :::
 -->
 <p>If you just plan to use this function (technically a <code>@reactive.calc</code>), you would only care that it returns something that you can use to subset a dataframe with. That’s the benefit of abstraction, but as someone who will maintain the code base, and in my case pair-programming, it makes the <em>implementation</em> extremely hard to follow.</p>
-<p>Turns out pandas <code>Index</code> objects, have an <code>.intersection()</code> method. So, no reason to convert to a <code>set</code> and we can implement everything we need with the same data type.</p>
-<div id="51f934b1" class="cell" data-execution_count="3">
+<p>Turns out pandas <code>Index</code> objects, have an <code>.intersection()</code> method. So, no reason to convert to a <code>set</code>, and we can implement everything we need with the same data type.</p>
+<div id="d19dc515" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb2" data-source-line-numbers="nil" data-code-line-numbers="4,5,9,13,15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@reactive.calc</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">@reactive.calc</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> filter_idx():</span>
@@ -342,7 +354,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <section id="warns-you-about-variable-redeclaration" class="level5">
 <h5 class="anchored" data-anchor-id="warns-you-about-variable-redeclaration">Warns You About Variable Redeclaration</h5>
 <p>If you end up completely redefining the type of a variable with the same name (not exactly the same situation from Tip 1), you will get a <code>reportRedeclaration</code> message from the type checker.</p>
-<div id="a60d28a8" class="cell" data-execution_count="4">
+<div id="cdc8929b" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb3" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> __future__ <span class="im">import</span> annotations</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -368,7 +380,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <section id="example-1" class="level4">
 <h4 class="anchored" data-anchor-id="example-1">Example</h4>
 <p>One example that was used in the <code>adaptive_filter</code> codebase was telling Pyright the type of data stored in the dataframe index. We used a function to return the index of a dataframe to make sure the type checker understands the data type stored.</p>
-<div id="a46d5d6c" class="cell" data-execution_count="5">
+<div id="b2c37a1e" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb6" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Any, cast</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> return_index(df: pd.DataFrame) <span class="op">-&gt;</span> <span class="st">"pd.Index[Any]"</span>:</span>
@@ -424,7 +436,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <section id="example-3" class="level4">
 <h4 class="anchored" data-anchor-id="example-3">Example</h4>
 <p>In the adaptive filter module, the initial implementation tracked 3 things: <code>id</code>, column name, and type of variable stored in the column.</p>
-<div id="4eee7df1" class="cell" data-execution_count="6">
+<div id="57536860" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb9" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>filters <span class="op">=</span> [<span class="st">"filter_size"</span>, <span class="st">"filter_id"</span>, <span class="st">"filter_total_bill"</span>]</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>cols <span class="op">=</span> [<span class="st">"size"</span>, <span class="st">"id"</span>, <span class="st">"total_bill"</span>]</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>col_types <span class="op">=</span> [<span class="st">"cat"</span>, <span class="st">"cat"</span>, <span class="st">"sliders"</span>]</span>
@@ -453,7 +465,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <section id="example-4" class="level4">
 <h4 class="anchored" data-anchor-id="example-4">Example</h4>
 <p>Using the same code example from above, we are manually tracking 3 parts for each component.</p>
-<div id="5b5d8430" class="cell" data-execution_count="7">
+<div id="708db337" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb10" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>filters <span class="op">=</span> [<span class="st">"filter_size"</span>, <span class="st">"filter_id"</span>, <span class="st">"filter_total_bill"</span>]</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>cols <span class="op">=</span> [<span class="st">"size"</span>, <span class="st">"id"</span>, <span class="st">"total_bill"</span>]</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>col_types <span class="op">=</span> [<span class="st">"cat"</span>, <span class="st">"cat"</span>, <span class="st">"sliders"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -495,7 +507,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <section id="example-5" class="level4">
 <h4 class="anchored" data-anchor-id="example-5">Example</h4>
 <p>Here is a helper function that was used in our adaptive filters module, It takes in a list of pandas <code>Index</code> objects, and finds the <code>.intersection()</code> across all the objects. This calculation is used many times throughout the application. It also makes a few data checks beforehand (expressed by the <code>...</code> in the code below).</p>
-<div id="5d26661d" class="cell" data-execution_count="8">
+<div id="af21b778" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb12" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> index_intersection_all(</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    to_intersect: List[<span class="st">"pd.Index[Any] | None"</span>],</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    default: <span class="st">"pd.Index[Any]"</span>,</span>
@@ -510,7 +522,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> intersection</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We can test this function like a regular Python function.</p>
-<div id="96d5a33b" class="cell" data-execution_count="9">
+<div id="cc5e4000" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb13" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>idx1 <span class="op">=</span> pd.Index([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>])</span>
@@ -550,29 +562,35 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    page.goto(app.url)</span>
 <span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>From there we can use various <code>.set()</code>, <code>.expect_*()</code>, methods from the controller components to modify the application and test the results.</p>
+<p>The tests will run through <code>pytest</code>.</p>
+<div class="sourceCode" id="cb17" data-code-line-numbers=""><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pytest</span> .</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>You do have the option to set different browsers and also headlessly (default) or headed (by passing <code>--headed</code>). Changing browsers and the “headedness” can help see if your issue is specific to the application or with the browser.</p>
+<div class="sourceCode" id="cb18" data-code-line-numbers=""><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pytest</span> . <span class="at">--browser</span> chromium <span class="at">--headed</span> <span class="co"># chromium also headed</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pytest</span> . <span class="at">--browser</span> firefox <span class="co"># firefox</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pytest</span> . <span class="at">--browser</span> webkit <span class="co"># webkit/safari</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <section id="example-6" class="level4">
 <h4 class="anchored" data-anchor-id="example-6">Example</h4>
 <p>Here’s an example of a test we used in a simple adaptive filter application.</p>
-<div class="sourceCode" id="cb17" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny.playwright <span class="im">import</span> controller</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny.run <span class="im">import</span> ShinyAppProc</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> playwright.sync_api <span class="im">import</span> Page</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny.pytest <span class="im">import</span> create_app_fixture</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> create_app_fixture(<span class="st">"app.py"</span>)</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_basic_app(page: Page, app: ShinyAppProc):</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    page.goto(app.url)</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    selectize_day <span class="op">=</span> controller.InputSelectize(page, <span class="st">"adaptive-filter_day"</span>)</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    selectize_day.<span class="bu">set</span>(<span class="st">"Fri"</span>)</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    selectize_day.expect_selected([<span class="st">"Fri"</span>])</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    selectize_time <span class="op">=</span> controller.InputSelectize(page, <span class="st">"adaptive-filter_time"</span>)</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    selectize_time.expect_choices([<span class="st">"Dinner"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb19" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny.playwright <span class="im">import</span> controller</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny.run <span class="im">import</span> ShinyAppProc</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> playwright.sync_api <span class="im">import</span> Page</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny.pytest <span class="im">import</span> create_app_fixture</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> create_app_fixture(<span class="st">"app.py"</span>)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_basic_app(page: Page, app: ShinyAppProc):</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    page.goto(app.url)</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    selectize_day <span class="op">=</span> controller.InputSelectize(page, <span class="st">"adaptive-filter_day"</span>)</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    selectize_day.<span class="bu">set</span>(<span class="st">"Fri"</span>)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    selectize_day.expect_selected([<span class="st">"Fri"</span>])</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    selectize_time <span class="op">=</span> controller.InputSelectize(page, <span class="st">"adaptive-filter_time"</span>)</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    selectize_time.expect_choices([<span class="st">"Dinner"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Since the adaptive filters are created within a shiny module, we have to be mindful of the <code>id</code> given for the module’s namespace. The actual component will be the given <code>id</code> followed by a dash, <code>-</code>, then whatever <code>id</code> was used for the component inside the shiny module.</p>
 <p>For example, if we called the module with the <code>adaptive</code> <code>id</code>,</p>
-<div class="sourceCode" id="cb18" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>filter_return <span class="op">=</span> adaptive_filter_module.filter_server(<span class="st">"adaptive"</span>, df<span class="op">=</span>tips)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb20" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>filter_return <span class="op">=</span> adaptive_filter_module.filter_server(<span class="st">"adaptive"</span>, df<span class="op">=</span>tips)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>the component <code>id</code> of the application for the <code>day</code> column filter would be <code>adaptive-filter_day</code> because inside the module, our filter names use a <code>filter_colname</code> format.</p>
 <p>From there, we can test clicking on a day of the week using an adaptive filter, and checking to see if another filter’s values have changed to the selection.</p>
 </section>
@@ -583,7 +601,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <!--
 this is a bit of an art.
 and as an educator, i sometimes feel that many python packages assume
-you know how software development and codeing working in python.
+you know how software development and coding working in python.
 
 this is especially the case when working with a DSL like the pydata stack.
 -->
@@ -606,60 +624,105 @@ tweak the code
 <li>Override the default calculated component type by passing the object</li>
 <li>Provide a <code>label</code> parameter to a custom component type to rename the label</li>
 </ul>
-<div class="sourceCode" id="cb19" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>override <span class="op">=</span> {</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"total_bill"</span>: <span class="va">None</span>,</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"day"</span>: <span class="st">"DAY!"</span>,</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"time"</span>: adaptive_filter.FilterCatStringSelect(),</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"size"</span>: adaptive_filter.FilterCatNumericCheckbox(label<span class="op">=</span><span class="st">"Party Size"</span>),</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Here’s an example of how the user can customize the components</p>
+<div class="sourceCode" id="cb21" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>override <span class="op">=</span> {</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"total_bill"</span>: <span class="va">None</span>,</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"day"</span>: <span class="st">"DAY!"</span>,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"time"</span>: shiny_adaptive_filter.FilterCatStringSelect(),</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"size"</span>: shiny_adaptive_filter.FilterCatNumericCheckbox(label<span class="op">=</span><span class="st">"Party Size"</span>),</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>All of the filters are documented in the module for the app author to look up, and provides an easy interface for them to use: the dictionary keys are the columns of the data set, and the values are any manual overrides the developer wants in their application.</p>
-<div class="sourceCode" id="cb20" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># in the ui</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>adaptive_filter.filter_ui(<span class="st">"adaptive"</span>)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>...</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="co"># in the server</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>adaptive_filters <span class="op">=</span> adaptive_filter.filter_server(</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"adaptive"</span>, df<span class="op">=</span>data, override<span class="op">=</span>override</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="co"># a reactive value that can be used anywhere else in the app</span></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>adaptive_filters_idx <span class="op">=</span> adaptive_filters[<span class="st">"filter_idx"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb22" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># in the ui</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>shiny_adaptive_filter.filter_ui(<span class="st">"adaptive"</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># in the server</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>adaptive_filters <span class="op">=</span> shiny_adaptive_filter.filter_server(</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"adaptive"</span>, df<span class="op">=</span>data, override<span class="op">=</span>override</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="co"># a reactive value that can be used anywhere else in the app</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>adaptive_filters_idx <span class="op">=</span> adaptive_filters[<span class="st">"filter_idx"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The implementation we used in adaptive filters uses an old C trick of having a <code>finish_init()</code> method that is run after the developer passes in the inputs for the constructor.</p>
-<div class="sourceCode" id="cb21" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BaseFilter(ABC, Generic[T]):</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, <span class="op">*</span>, label: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span> <span class="op">=</span> <span class="va">None</span>):</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>        ...</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> finish_init(</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>,</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>        data: Callable[[], pd.DataFrame] <span class="op">|</span> pd.DataFrame,</span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>        <span class="bu">id</span>: <span class="bu">str</span>,</span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>        column_name: <span class="bu">str</span>,</span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>,</span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>        session: Session <span class="op">|</span> <span class="va">None</span> <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    ):</span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>        ...</span>
-<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb23" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BaseFilter(ABC, Generic[T]):</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, <span class="op">*</span>, label: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span> <span class="op">=</span> <span class="va">None</span>):</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>        ...</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> finish_init(</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>,</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>        data: Callable[[], pd.DataFrame] <span class="op">|</span> pd.DataFrame,</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>        <span class="bu">id</span>: <span class="bu">str</span>,</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>        column_name: <span class="bu">str</span>,</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>,</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>        session: Session <span class="op">|</span> <span class="va">None</span> <span class="op">=</span> <span class="va">None</span>,</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    ):</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>        ...</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>This is so the user <em>only</em> needs to pass in the type of filter they want to override, or the component label that will be displayed in the application. This decision was made so it balances user convenience and developer convenience, but sacrifices on one of the dogmas of object oriented programming, where a valid object gets created, but still cannot be used until another method gets called. Anytime the filter constructor gets called with the user inputs, we <strong>must</strong> call the <code>.finish_init()</code> method to have a use able filter component object.</p>
-<div class="sourceCode" id="cb22" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>adaptive_filter.FilterCatStringCheckbox(label<span class="op">=</span>label)<span class="op">\</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    .finish_init(df, <span class="bu">id</span>, col_str, session<span class="op">=</span>session)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb24" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>shiny_adaptive_filter.FilterCatStringCheckbox(label<span class="op">=</span>label)<span class="op">\</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    .finish_init(df, <span class="bu">id</span>, col_str, session<span class="op">=</span>session)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This tradeoff was made to avoid having the user pass in a <a href="https://docs.python.org/3/library/functools.html#functools.partial">partial</a> (aka currying) or <a href="https://docs.python.org/3/reference/expressions.html#lambda">lambdas</a>. Contrast the original <code>override</code> dictionary with either of the ones below, and you can see how sacrificing the object oriented dogma may be worth it to make the tool easier for users.</p>
+<div class="sourceCode" id="cb25" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> functools <span class="im">import</span> partial</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>override <span class="op">=</span> {</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># using a partial</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"time"</span>: partial(shiny_adaptive_filter.FilterCatStringCheckbox, label<span class="op">=</span><span class="st">"Time of Day"</span>),</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># using a lambda</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"size"</span>: <span class="kw">lambda</span> data, <span class="bu">id</span>, colname, session: shiny_adaptive_filter.FilterCatNumericCheckbox(data, <span class="bu">id</span>, colname, label<span class="op">=</span><span class="st">"Time of Day"</span>, session<span class="op">=</span>session),</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="conclusion" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
 <p>I like to remind my student students that just because the code works without error, doesn’t mean it’s correct, and just because it’s correct, doesn’t mean you can’t improve it.</p>
 <p>I wanted a shiny app to have filter behaviors that did not exist and set off creating a custom implementation to be able to share with others. This lead me to create custom filtering component behaviors, refactoring them into shiny modules, and creating a python package to share with others. Along the way I got help from Joe Cheng, CTO at Posit, PBC and one of the main authors of Shiny, who taught me how to take my original proof of concept code, and make it respectable from a software engineering point of view. Can the codebase be improved? Absolutely. But I hope the tips in this post can help level up your software engineering skills as a data scientist.</p>
-<p>Here’s an example of the adaptive filters at work. See how the values in the other filters “adapt” when <code>Fri</code> is selected for the <code>day</code> filter.</p>
+<p>Here’s a minimal example of the adaptive filters at work. Set the <code>day</code> checkbox to <code>Fri</code> and see how the other filters “adapt” to the results. If you want to give it a try yourself, you can install the filters from PyPI.</p>
+<div class="sourceCode" id="cb26" data-code-line-numbers=""><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install shiny_adaptive_filter</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="column-screen-inset">
-<pre class="shinylive-python" data-engine="python" data-code-line-numbers="24,30,31,32,36,43,44,45,46,47"><code>#| standalone: true
+<pre class="shinylive-python" data-engine="python" data-code-line-numbers=""><code>#| standalone: true
 #| components: [editor, viewer]
 #| viewerHeight: 700
 
 import pandas as pd
 from shiny import App, render, reactive, ui
 
-from pyshiny_adaptive_filter import adaptive_filter_module
+import shiny_adaptive_filter as af
+
+app_ui = ui.page_sidebar(
+    ui.sidebar(
+        af.filter_ui("adaptive"),
+    ),
+    ui.output_data_frame("render_df"),
+)
+
+def server(input, output, session):
+    @reactive.calc
+    def tips_reactive():
+        return tips
+
+    @reactive.calc
+    def data_filtered():
+        df = tips_reactive().loc[filter_idx()]
+        return df
+
+    @render.data_frame
+    def render_df():
+        return render.DataGrid(data_filtered())
+
+    override = {
+    "total_bill": None,
+    "tip": None,
+    }
+
+    filter_return = af.filter_server(
+        "adaptive",
+        df=tips_reactive,
+        override=override,
+    )
+    filter_idx = filter_return["filter_idx"]
 
 data = {
     'total_bill': [16.99, 10.34, 21.01, 23.68, 24.59],
@@ -673,39 +736,11 @@ data = {
 
 tips = pd.DataFrame(data)
 
-app_ui = ui.page_sidebar(
-    ui.sidebar(
-        adaptive_filter_module.filter_ui("adaptive"), 
-    ),
-    ui.output_data_frame("render_df"),
-)
-
-def server(input, output, session):
-    @reactive.calc 
-    def tips_reactive(): 
-        return tips 
-
-    @reactive.calc
-    def data_filtered():
-        df = tips_reactive().loc[filter_idx()] 
-        return df
-
-    @render.data_frame
-    def render_df():
-        return render.DataGrid(data_filtered())
-
-    filter_return = adaptive_filter_module.filter_server( 
-        "adaptive", 
-        df=tips_reactive, 
-    ) 
-    filter_idx = filter_return["filter_idx"] 
-
 app = App(app_ui, server)
 
 
 ## file: requirements.txt
-shiny_adaptive_filter
-</code></pre>
+shiny_adaptive_filter</code></pre>
 </div>
 
 
