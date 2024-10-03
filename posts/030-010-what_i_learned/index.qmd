@@ -26,10 +26,10 @@ look at data raw data set,
 apply filters to subset the data set,
 and be able to download the final data set so you can use it locally.
 
-I created the application that automatically creates a filter for all the columns
-in a data frame and provides an interface for a user to explore different
-subsets of the data and allows them to download the final dataset.
-
+Shiny did not have the type of filtering behavior I wanted,
+so I needed to build my own.
+I got the opportunity to work with Joe Cheng at Posit to learn about
+building software and shiny modules.
 Here's a few tips I learned through the process if you want to
 build your own custom features into Shiny.
 
@@ -38,6 +38,13 @@ build your own custom features into Shiny.
 3. Know When You Should Use Shiny Modules
 4. Make your shiny app testable
 5. Think about the developer experience
+
+:::{.callout-note}
+If you are new to Shiny Modules you
+can read about them in the
+[Shiny Modules](https://shiny.posit.co/py/docs/modules.html)
+learning page.
+:::
 
 <hr>
 <!-- BREAK -->
@@ -192,7 +199,7 @@ it makes the _implementation_ extremely hard to follow.
 
 Turns out pandas `Index` objects,
 have an `.intersection()` method.
-So, no reason to convert to a `set` and we can
+So, no reason to convert to a `set`, and we can
 implement everything we need with the same data type.
 
 ```{python}
@@ -660,6 +667,23 @@ def test_basic_app(page: Page, app: ShinyAppProc):
 From there we can use various `.set()`, `.expect_*()`, methods
 from the controller components to modify the application and test the results.
 
+The tests will run through `pytest`.
+
+```bash
+pytest .
+```
+
+You do have the option to set different browsers and also headlessly (default)
+or headed (by passing `--headed`).
+Changing browsers and the "headedness" can help see if your issue
+is specific to the application or with the browser.
+
+```bash
+pytest . --browser chromium --headed # chromium also headed
+pytest . --browser firefox # firefox
+pytest . --browser webkit # webkit/safari
+```
+
 #### Example
 
 Here's an example of a test we used in a simple adaptive filter application.
@@ -709,7 +733,7 @@ and checking to see if another filter's values have changed to the selection.
 <!--
 this is a bit of an art.
 and as an educator, i sometimes feel that many python packages assume
-you know how software development and codeing working in python.
+you know how software development and coding working in python.
 
 this is especially the case when working with a DSL like the pydata stack.
 -->
@@ -730,7 +754,6 @@ Shiny is a tool for data scientists,
 and because of data science's popularity in the last decade,
 the training for a data scientist is not from software engineering
 and computer science.
-
 
 But when a tradeoff between
 convenience for the user,
@@ -759,12 +782,14 @@ We ended up writing the code, so the user can provide customizations in one of 3
 - Override the default calculated component type by passing the object
 - Provide a `label` parameter to a custom component type to rename the label
 
+Here's an example of how the user can customize the components
+
 ```python
 override = {
     "total_bill": None,
     "day": "DAY!",
-    "time": adaptive_filter.FilterCatStringSelect(),
-    "size": adaptive_filter.FilterCatNumericCheckbox(label="Party Size"),
+    "time": shiny_adaptive_filter.FilterCatStringSelect(),
+    "size": shiny_adaptive_filter.FilterCatNumericCheckbox(label="Party Size"),
 }
 ```
 
@@ -775,11 +800,11 @@ are any manual overrides the developer wants in their application.
 
 ```python
 # in the ui
-adaptive_filter.filter_ui("adaptive")
+shiny_adaptive_filter.filter_ui("adaptive")
 ...
 
 # in the server
-adaptive_filters = adaptive_filter.filter_server(
+adaptive_filters = shiny_adaptive_filter.filter_server(
     "adaptive", df=data, override=override
 )
 
@@ -821,8 +846,29 @@ Anytime the filter constructor gets called with the user inputs,
 we **must** call the `.finish_init()` method to have a use able filter component object.
 
 ```python
-adaptive_filter.FilterCatStringCheckbox(label=label)\
+shiny_adaptive_filter.FilterCatStringCheckbox(label=label)\
     .finish_init(df, id, col_str, session=session)
+```
+
+This tradeoff was made to avoid having the user pass in a
+[partial](https://docs.python.org/3/library/functools.html#functools.partial)
+(aka currying)
+or
+[lambdas](https://docs.python.org/3/reference/expressions.html#lambda).
+Contrast the original `override` dictionary with either of the ones below,
+and you can see how sacrificing the object oriented dogma may be worth it
+to make the tool easier for users.
+
+```python
+from functools import partial
+
+override = {
+    # using a partial
+    "time": partial(shiny_adaptive_filter.FilterCatStringCheckbox, label="Time of Day"),
+
+    # using a lambda
+    "size": lambda data, id, colname, session: shiny_adaptive_filter.FilterCatNumericCheckbox(data, id, colname, label="Time of Day", session=session),
+}
 ```
 
 ## Conclusion
@@ -845,9 +891,14 @@ Can the codebase be improved? Absolutely.
 But I hope the tips in this post can help level up your
 software engineering skills as a data scientist.
 
-Here's an example of the adaptive filters at work.
-See how the values in the other filters "adapt"
-when `Fri` is selected for the `day` filter.
+Here's a minimal example of the adaptive filters at work.
+Set the `day` checkbox to `Fri` and see how the other filters
+"adapt" to the results.
+If you want to give it a try yourself, you can install the filters from PyPI.
+
+```bash
+pip install shiny_adaptive_filter
+```
 
 :::{.column-screen-inset}
 ```{shinylive-python}
@@ -855,10 +906,9 @@ when `Fri` is selected for the `day` filter.
 #| components: [editor, viewer]
 #| viewerHeight: 700
 
-{{< include ../../app-adaptive_filters/app-0010-020-adaptive_simple.py >}}
+{{< include ../../app/app-adaptive_filters/app-0010-030-overrides.py >}}
 
 ## file: requirements.txt
 shiny_adaptive_filter
-
 ```
 :::

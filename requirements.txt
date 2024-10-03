@@ -9,3 +9,9 @@ jupyter
 seaborn
 PyYAML
 shiny_adaptive_filter
+
+# examples
+faicons
+plotly
+ridgeplot
+shinywidgets

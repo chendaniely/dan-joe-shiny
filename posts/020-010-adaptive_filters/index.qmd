@@ -91,7 +91,7 @@ Here's an example of the behaviour in a simple app.
 #| components: [editor, viewer]
 #| viewerHeight: 700
 
-{{< include ../../app-adaptive_filters/app-0010-010-2_filters.py >}}
+{{< include ../../app/app-adaptive_filters/app-0010-010-2_filters.py >}}
 ```
 :::
 
@@ -143,7 +143,7 @@ adaptive_filters_idx = adaptive_filters["filter_idx"]
 #| components: [editor, viewer]
 #| viewerHeight: 700
 
-{{< include ../../app-adaptive_filters/app-0010-020-adaptive_simple.py >}}
+{{< include ../../app/app-adaptive_filters/app-0010-020-adaptive_simple.py >}}
 
 ## file: requirements.txt
 shiny_adaptive_filter

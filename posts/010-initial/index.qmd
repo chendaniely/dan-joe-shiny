@@ -83,7 +83,7 @@ we can put in place holder elements for
 #| components: [editor, viewer]
 #| viewerHeight: 500
 
-{{< include ../../app/app-010-010-initial.py >}}
+{{< include ../../app/app-breakdown/app-010-010-initial.py >}}
 ```
 :::
 
@@ -100,7 +100,7 @@ and add a filter for a column of the same data type,
 #| components: [editor, viewer]
 #| viewerHeight: 650
 
-{{< include ../../app/app-010-020-2_filters.py >}}
+{{< include ../../app/app-breakdown/app-010-020-2_filters.py >}}
 ```
 :::
 
@@ -260,7 +260,7 @@ all the index labels that matched the filter.
 #| components: [editor, viewer]
 #| viewerHeight: 650
 
-{{< include ../../app/app-010-030-filter_index.py >}}
+{{< include ../../app/app-breakdown/app-010-030-filter_index.py >}}
 ```
 :::
 
@@ -313,7 +313,7 @@ Do not change the data type of your variables during an implementation.
 #| components: [editor, viewer]
 #| viewerHeight: 650
 
-{{< include ../../app/app-010-040-filter_index_improvement.py >}}
+{{< include ../../app/app-breakdown/app-010-040-filter_index_improvement.py >}}
 ```
 :::
 
@@ -329,7 +329,7 @@ and also as a cue to ourself if we end up using types that we do not expect.
 #| components: [editor, viewer]
 #| viewerHeight: 650
 
-{{< include ../../app/app-010-050-type_hints.py >}}
+{{< include ../../app/app-breakdown/app-010-050-type_hints.py >}}
 ```
 :::
 
