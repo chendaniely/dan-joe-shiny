@@ -1,5 +1,5 @@
 ---
-title: "Tips for Implementing Custom Features into Shiny"
+title: "Tips for Implementing Custom Features in Shiny"
 subtitle: "Creating and Testing Your Shiny Modules"
 author: "Daniel Chen"
 
