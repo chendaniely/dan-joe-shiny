@@ -12,12 +12,8 @@ app_ui = ui.page_sidebar(
 
 def server(input, output, session):
     @reactive.calc
-    def tips_reactive():
-        return tips
-
-    @reactive.calc
     def data_filtered():
-        df = tips_reactive().loc[filter_idx()]
+        df = tips.loc[filter_idx()]
         return df
 
     @render.data_frame
@@ -31,7 +27,7 @@ def server(input, output, session):
 
     filter_return = af.filter_server(
         "adaptive",
-        df=tips_reactive,
+        df=tips,
         override=override,
     )
     filter_idx = filter_return["filter_idx"]
