@@ -1,6 +1,6 @@
 ---
 title: "Tips for Implementing Custom Features in Shiny"
-subtitle: "Creating and Testing Your Shiny Modules"
+subtitle: "Level-Up Your Shiny Code for Maintainability and Reusability"
 author: "Daniel Chen"
 
 format: html
@@ -20,18 +20,22 @@ why do they care?
 -->
 
 Earlier this year, I wanted to create a data explorer app using Shiny for Python.
-It is the kind of application you see a lot on government data portals.
-You have a few visualizations about the data,
-look at data raw data set,
-apply filters to subset the data set,
+You see this kind of application a lot on government data portals.
+There are data visualizations,
+components to filter the data,
+the raw data itself,
 and be able to download the final data set so you can use it locally.
 
 Shiny did not have the type of filtering behavior I wanted,
 so I needed to build my own.
 I got the opportunity to work with Joe Cheng at Posit to learn about
 building software and shiny modules.
-Here's a few tips I learned through the process if you want to
-build your own custom features into Shiny.
+The `shiny_adaptive_filter` is available as a solution to the filtering problem
+you can install and try in other contexts.
+Skip to the end for an example and install instructions.
+
+Here’s a few tips I learned through the process to level-up your Shiny code
+to be more maintainable and reusable.
 
 1. Keep variable types consistent
 2. Use Python type hints
@@ -46,9 +50,7 @@ can read about them in the
 learning page.
 :::
 
-<hr>
 <!-- BREAK -->
-<hr>
 
 ## Background
 
@@ -203,7 +205,6 @@ So, no reason to convert to a `set`, and we can
 implement everything we need with the same data type.
 
 ```{python}
-@reactive.calc
 @reactive.calc
 def filter_idx():
     df = df_tips() # <<
