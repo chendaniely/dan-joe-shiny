@@ -272,7 +272,7 @@ Here's the actual code snippet I wrote to get the process working.
 <li>Perform the set intersection</li>
 <li>Return a <code>list</code> of the values</li>
 </ol>
-<div id="13f23f83" class="cell" data-execution_count="2">
+<div id="0ea221c4" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb1" data-source-line-numbers="nil" data-code-line-numbers="3,4,8,12,14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="at">@reactive.calc</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> filter_idx():</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> df_tips() </span>
@@ -318,7 +318,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 -->
 <p>If you just plan to use this function (technically a <code>@reactive.calc</code>), you would only care that it returns something that you can use to subset a dataframe with. That’s the benefit of abstraction, but as someone who will maintain the code base, and in my case pair-programming, it makes the <em>implementation</em> extremely hard to follow.</p>
 <p>Turns out pandas <code>Index</code> objects, have an <code>.intersection()</code> method. So, no reason to convert to a <code>set</code>, and we can implement everything we need with the same data type.</p>
-<div id="e7223eed" class="cell" data-execution_count="3">
+<div id="c17b57a4" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb2" data-source-line-numbers="nil" data-code-line-numbers="3,4,8,12,14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@reactive.calc</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> filter_idx():</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> df_tips() </span>
@@ -352,7 +352,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <section id="warns-you-about-variable-redeclaration" class="level5">
 <h5 class="anchored" data-anchor-id="warns-you-about-variable-redeclaration">Warns You About Variable Redeclaration</h5>
 <p>If you end up completely redefining the type of a variable with the same name (not exactly the same situation from Tip 1), you will get a <code>reportRedeclaration</code> message from the type checker.</p>
-<div id="3f82cc4a" class="cell" data-execution_count="4">
+<div id="a4c46330" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb3" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> __future__ <span class="im">import</span> annotations</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -378,7 +378,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <section id="example-1" class="level4">
 <h4 class="anchored" data-anchor-id="example-1">Example</h4>
 <p>One example that was used in the <code>adaptive_filter</code> codebase was telling Pyright the type of data stored in the dataframe index. We used a function to return the index of a dataframe to make sure the type checker understands the data type stored.</p>
-<div id="a6352f55" class="cell" data-execution_count="5">
+<div id="20b35fbd" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb6" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Any, cast</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> return_index(df: pd.DataFrame) <span class="op">-&gt;</span> <span class="st">"pd.Index[Any]"</span>:</span>
@@ -434,7 +434,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <section id="example-3" class="level4">
 <h4 class="anchored" data-anchor-id="example-3">Example</h4>
 <p>In the adaptive filter module, the initial implementation tracked 3 things: <code>id</code>, column name, and type of variable stored in the column.</p>
-<div id="6a537836" class="cell" data-execution_count="6">
+<div id="a93c583e" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb9" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>filters <span class="op">=</span> [<span class="st">"filter_size"</span>, <span class="st">"filter_id"</span>, <span class="st">"filter_total_bill"</span>]</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>cols <span class="op">=</span> [<span class="st">"size"</span>, <span class="st">"id"</span>, <span class="st">"total_bill"</span>]</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>col_types <span class="op">=</span> [<span class="st">"cat"</span>, <span class="st">"cat"</span>, <span class="st">"sliders"</span>]</span>
@@ -463,7 +463,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <section id="example-4" class="level4">
 <h4 class="anchored" data-anchor-id="example-4">Example</h4>
 <p>Using the same code example from above, we are manually tracking 3 parts for each component.</p>
-<div id="a75c0ea4" class="cell" data-execution_count="7">
+<div id="50d2ec1b" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb10" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>filters <span class="op">=</span> [<span class="st">"filter_size"</span>, <span class="st">"filter_id"</span>, <span class="st">"filter_total_bill"</span>]</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>cols <span class="op">=</span> [<span class="st">"size"</span>, <span class="st">"id"</span>, <span class="st">"total_bill"</span>]</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>col_types <span class="op">=</span> [<span class="st">"cat"</span>, <span class="st">"cat"</span>, <span class="st">"sliders"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -505,7 +505,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <section id="example-5" class="level4">
 <h4 class="anchored" data-anchor-id="example-5">Example</h4>
 <p>Here is a helper function that was used in our adaptive filters module, It takes in a list of pandas <code>Index</code> objects, and finds the <code>.intersection()</code> across all the objects. This calculation is used many times throughout the application. It also makes a few data checks beforehand (expressed by the <code>...</code> in the code below).</p>
-<div id="356747a8" class="cell" data-execution_count="8">
+<div id="182ce23b" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb12" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> index_intersection_all(</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    to_intersect: List[<span class="st">"pd.Index[Any] | None"</span>],</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    default: <span class="st">"pd.Index[Any]"</span>,</span>
@@ -520,7 +520,7 @@ TypeError: Passing a set as an indexer is not supported. Use a list instead.
 <span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> intersection</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We can test this function like a regular Python function.</p>
-<div id="28e5e604" class="cell" data-execution_count="9">
+<div id="21c492d3" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb13" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>idx1 <span class="op">=</span> pd.Index([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>])</span>
@@ -680,7 +680,7 @@ tweak the code
 <p>Here’s a minimal example of the adaptive filters at work. Set the <code>day</code> checkbox to <code>Fri</code> and see how the other filters “adapt” to the results. If you want to give it a try yourself, you can install the filters from PyPI.</p>
 <div class="sourceCode" id="cb26" data-code-line-numbers=""><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install shiny_adaptive_filter</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="column-screen-inset">
-<pre class="shinylive-python" data-engine="python" data-code-line-numbers=""><code>#| standalone: true
+<pre class="shinylive-python" data-engine="python" data-code-line-numbers="27,28,29,30,32"><code>#| standalone: true
 #| components: [editor, viewer]
 #| viewerHeight: 700
 
@@ -706,12 +706,12 @@ def server(input, output, session):
     def render_df():
         return render.DataGrid(data_filtered())
 
-    override = {
-        "total_bill": None, # disable the total_bill column
-        "tips": saf.FilterNumNumericRange(), # use a different default filter
-        "day": "Day of Week", # set custom component label
-        "size": saf.FilterCatNumericCheckbox(label="Party Size"), # set component and label
-    }
+    override = { 
+        "total_bill": None, 
+        "tips": saf.FilterNumNumericRange(), 
+        "day": "Day of Week", 
+        "size": saf.FilterCatNumericCheckbox(label="Party Size"),
+    } 
 
     filter_return = saf.filter_server(
         "adaptive",

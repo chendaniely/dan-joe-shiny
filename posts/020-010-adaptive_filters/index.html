@@ -190,14 +190,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <p>One of the main limitations when trying to use Shiny components to filter a dataframe is the filters mainly work in an <code>and</code> operator on the data. This means that when you are trying to use interactively explore your data, you will inevitably end up selecting a combination of filter values that will return an empty dataframe.</p>
 <p>We have created a new set of shiny selectize and checkbox filters to help you with these kinds of interactive data filtering tasks.</p>
-<div class="sourceCode" id="cb1" data-code-line-numbers=""><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install adaptive_filter</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1" data-code-line-numbers=""><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install shiny_adaptive_filter</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Take a look at an example application using the new filters.</p>
 <hr>
 <section id="the-problem" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="the-problem">The Problem</h2>
 <!-- BREAK -->
 <p>Imagine this small tips dataset</p>
-<div id="c1af4a39" class="cell" data-execution_count="1">
+<div id="c8d2d229" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -290,7 +290,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>In shiny, you will typically create separate input components for each column you want the user to interact with and filter down the data. If we made filters for all the categorical variables and wanted to filter the <code>day</code> variable down to <code>Fri</code>.</p>
-<div id="2e89de87" class="cell" data-execution_count="2">
+<div id="c91cc00b" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>tips.loc[tips[<span class="st">"day"</span>] <span class="op">==</span> <span class="st">"Fri"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -330,7 +330,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Traditionally, your filter components will still have options for the entire dataframe, it does not react to the filters you already selected. In a traditional shiny application, you will still see <code>Lunch</code> in the <code>time</code> filter. This means the user can still select <code>Fri</code> and subsequently, <code>Lunch</code> and be left with an empty dataframe result.</p>
-<div id="df9ed06b" class="cell" data-execution_count="3">
+<div id="b9396325" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tips.loc[(tips[<span class="st">"day"</span>] <span class="op">==</span> <span class="st">"Fri"</span>) <span class="op">&amp;</span> (tips[<span class="st">"time"</span>] <span class="op">==</span> <span class="st">"Lunch"</span>)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -505,7 +505,7 @@ Note
 <p><code>shiny_adaptive_filter</code> tries to pick a reasonable default component for you based on the data type and number of unique values. In this example, the <code>total_bill</code> and <code>tip</code> columns are <code>selectize</code> components because our example dataframe only has 5 rows of data.</p>
 </div>
 </div>
-<section id="overrides" class="level4">
+<section id="overrides" class="level4 page-columns page-full">
 <h4 class="anchored" data-anchor-id="overrides">Overrides</h4>
 <p>By default, the module will try to create an adaptive filter for <em>all</em> the columns in your data. It tries to make sensible defaults for the kind of component you want. However, you can change (i.e., override) any of the default behaviors.</p>
 <p>There are 3 (3) kinds of overrides you can provide.</p>
@@ -522,8 +522,8 @@ Note
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"day"</span>: <span class="st">"Day of Week"</span>, <span class="co"># set custom component label</span></span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"size"</span>: saf.FilterCatNumericCheckbox(label<span class="op">=</span><span class="st">"Party Size"</span>), <span class="co"># set component and label</span></span>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>FilterNumNumericRange :::{.column-screen-inset}</p>
-<pre class="shinylive-python" data-engine="python" data-code-line-numbers=""><code>#| standalone: true
+<div class="column-screen-inset">
+<pre class="shinylive-python" data-engine="python" data-code-line-numbers="27,28,29,30,32"><code>#| standalone: true
 #| components: [editor, viewer]
 #| viewerHeight: 700
 
@@ -549,12 +549,12 @@ def server(input, output, session):
     def render_df():
         return render.DataGrid(data_filtered())
 
-    override = {
-        "total_bill": None, # disable the total_bill column
-        "tips": saf.FilterNumNumericRange(), # use a different default filter
-        "day": "Day of Week", # set custom component label
-        "size": saf.FilterCatNumericCheckbox(label="Party Size"), # set component and label
-    }
+    override = { 
+        "total_bill": None, 
+        "tips": saf.FilterNumNumericRange(), 
+        "day": "Day of Week", 
+        "size": saf.FilterCatNumericCheckbox(label="Party Size"),
+    } 
 
     filter_return = saf.filter_server(
         "adaptive",
@@ -579,14 +579,15 @@ app = App(app_ui, server)
 
 
 ## file: requirements.txt
-shiny_adaptive_filter</code></pre>
-<p>:::</p>
+shiny_adaptive_filter&gt;=0.0.1.9004</code></pre>
+</div>
 </section>
 </section>
 </section>
 <section id="summary" class="level2">
 <h2 class="anchored" data-anchor-id="summary">Summary</h2>
 <p><code>shiny_adaptive_filters</code> is a solution for having data frame filter components “adapt” to the filters set by other components. It allows users to select valid rows of data as they are subsetting their data, and provides a visual cue for invalid data filtering combinations.</p>
+<p>This package hopes to make your next Shiny for Python data application a bit more user friendly. We have a few improvements and next iterations in mind already, but give the package module a try and let us know what works and doesn’t work for you.</p>
 
 
 </section>
