@@ -22,7 +22,7 @@ We have created a new set of shiny selectize and checkbox filters to help you wi
 these kinds of interactive data filtering tasks.
 
 ```bash
-pip install adaptive_filter
+pip install shiny_adaptive_filter
 ```
 
 Take a look at an example application using the new filters.
@@ -194,7 +194,7 @@ override = {
     "size": saf.FilterCatNumericCheckbox(label="Party Size"), # set component and label
 }
 ```
-FilterNumNumericRange
+
 :::{.column-screen-inset}
 ```{shinylive-python}
 #| standalone: true
@@ -204,7 +204,7 @@ FilterNumNumericRange
 {{< include ../../app/app-adaptive_filters/app-030-overrides.py >}}
 
 ## file: requirements.txt
-shiny_adaptive_filter
+shiny_adaptive_filter>=0.0.1.9004
 ```
 :::
 
@@ -214,3 +214,8 @@ shiny_adaptive_filter
 "adapt" to the filters set by other components.
 It allows users to select valid rows of data as they are subsetting their data,
 and provides a visual cue for invalid data filtering combinations.
+
+This package hopes to make your next Shiny for Python data application a bit more
+user friendly.
+We have a few improvements and next iterations in mind already,
+but give the package module a try and let us know what works and doesn't work for you.

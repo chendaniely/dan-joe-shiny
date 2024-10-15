@@ -20,12 +20,12 @@ def server(input, output, session):
     def render_df():
         return render.DataGrid(data_filtered())
 
-    override = {
-        "total_bill": None, # disable the total_bill column
-        "tips": saf.FilterNumNumericRange(), # use a different default filter
-        "day": "Day of Week", # set custom component label
-        "size": saf.FilterCatNumericCheckbox(label="Party Size"), # set component and label
-    }
+    override = { # <<
+        "total_bill": None, # <<
+        "tips": saf.FilterNumNumericRange(), # <<
+        "day": "Day of Week", # <<
+        "size": saf.FilterCatNumericCheckbox(label="Party Size"),
+    } # <<
 
     filter_return = saf.filter_server(
         "adaptive",
