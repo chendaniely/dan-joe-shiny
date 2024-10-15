@@ -1,6 +1,6 @@
 ---
 title: "Introducing Adaptive Filters"
-subtitle: "A betty way to filter your data in shiny"
+subtitle: "A different way to filter your data in shiny"
 author: "Daniel Chen"
 
 format: html
@@ -83,7 +83,8 @@ tips.loc[(tips["day"] == "Fri") & (tips["time"] == "Lunch")]
 
 This empty dataframe result may not be what you want the end user to see.
 
-Here's an example of the behaviour in a simple app.
+Here's an example of the behavior in a simple app.
+Try Setting the filter for `Fri` and `Lunch`.
 
 :::{.column-screen-inset}
 ```{shinylive-python}
@@ -91,7 +92,7 @@ Here's an example of the behaviour in a simple app.
 #| components: [editor, viewer]
 #| viewerHeight: 700
 
-{{< include ../../app/app-adaptive_filters/app-0010-010-2_filters.py >}}
+{{< include ../../app/app-adaptive_filters/app-010-2_filters.py >}}
 ```
 :::
 
@@ -108,13 +109,13 @@ exploring data interactively.
 You can give the new components a try.
 
 ```bash
-pip install adaptive_filter # TODO: check final name
+pip install shiny_adaptive_filter
 ```
 
 To use the components you will need to import the shiny module
 
 ```python
-from shiny_adaptive_filter import adaptive_filter_module
+import shiny_adaptive_filter as saf
 ```
 
 You then pass the module id and data into the server module,
@@ -122,12 +123,12 @@ and then place the UI where you want with the ui module.
 
 ```python
 # in the UI
-adaptive_filter_module.filter_ui("adaptive")
+saf.filter_ui("adaptive") # filter UIs from the module
 
 # in the server function
 adaptive_filters = adaptive_filter_module.filter_server(
-        "adaptive",
-        df=tips_original,
+        "adaptive", # name of the module id
+        df=tips, # dataframe (can also be a reactive)
     )
 ```
 The module returns an index of values that the application author
@@ -137,13 +138,19 @@ can use to filter their data in a `@reactive.calc`
 adaptive_filters_idx = adaptive_filters["filter_idx"]
 ```
 
+You can now use the `adaptive_filters_idx()` reactive calc in the rest of
+your application to filter the data from the adaptive filters.
+In the application example below, now try selecting `Fri` and `Lunch`.
+You will notice the `Lunch` option disappear when `Fri` is selected,
+since the combination of the values is not valid.
+
 :::{.column-screen-inset}
 ```{shinylive-python}
 #| standalone: true
 #| components: [editor, viewer]
 #| viewerHeight: 700
 
-{{< include ../../app/app-adaptive_filters/app-0010-020-adaptive_simple.py >}}
+{{< include ../../app/app-adaptive_filters/app-020-adaptive_simple.py >}}
 
 ## file: requirements.txt
 shiny_adaptive_filter
@@ -151,20 +158,26 @@ shiny_adaptive_filter
 ```
 :::
 
-
+:::{.callout-note}
+`shiny_adaptive_filter` tries to pick a reasonable default component for you based
+on the data type and number of unique values.
+In this example,
+the `total_bill` and `tip` columns are `selectize` components because
+our example dataframe only has 5 rows of data.
+:::
 
 #### Overrides
 
 By default,
 the module will try to create an adaptive filter for _all_ the columns in your data.
 It tries to make sensible defaults for the kind of component you want.
-However, you can change (i.e., override) any of the default behaviours.
+However, you can change (i.e., override) any of the default behaviors.
 
 There are 3 (3) kinds of overrides you can provide.
 
+1. Disable a filter
 1. Change the filter type
-2. Disable a filter
-3. Change the filter label
+2. Change the filter label
 
 We do this by creating a python dictionary where keys are the
 column names of the incoming dataframe that we want to target.
@@ -176,6 +189,28 @@ If you want to change the filter label, pass in a string of the new label.
 ```python
 override = {
     "total_bill": None, # disable the total_bill column
-
+    "tips": saf.FilterNumNumericRange(), # use a different default filter
+    "day": "Day of Week", # set custom component label
+    "size": saf.FilterCatNumericCheckbox(label="Party Size"), # set component and label
 }
 ```
+FilterNumNumericRange
+:::{.column-screen-inset}
+```{shinylive-python}
+#| standalone: true
+#| components: [editor, viewer]
+#| viewerHeight: 700
+
+{{< include ../../app/app-adaptive_filters/app-030-overrides.py >}}
+
+## file: requirements.txt
+shiny_adaptive_filter
+```
+:::
+
+## Summary
+
+`shiny_adaptive_filters` is a solution for having data frame filter components
+"adapt" to the filters set by other components.
+It allows users to select valid rows of data as they are subsetting their data,
+and provides a visual cue for invalid data filtering combinations.

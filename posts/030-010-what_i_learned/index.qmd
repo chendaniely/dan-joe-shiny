@@ -907,7 +907,7 @@ pip install shiny_adaptive_filter
 #| components: [editor, viewer]
 #| viewerHeight: 700
 
-{{< include ../../app/app-adaptive_filters/app-0010-030-overrides.py >}}
+{{< include ../../app/app-adaptive_filters/app-030-overrides.py >}}
 
 ## file: requirements.txt
 shiny_adaptive_filter
