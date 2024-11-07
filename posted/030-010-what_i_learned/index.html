@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Daniel Chen">
+
+<title>Tips for Implementing Custom Features in Shiny – Learning Shiny</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/quarto-contrib/line-highlight-1.0.0/line-highlight.css" rel="stylesheet">
+<meta name="shinylive:serviceworker_dir" content="../..">
+<script src="../../site_libs/quarto-contrib/shinylive-0.9.0/shinylive/load-shinylive-sw.js" type="module"></script>
+<script src="../../site_libs/quarto-contrib/shinylive-0.9.0/shinylive/run-python-blocks.js" type="module"></script>
+<link href="../../site_libs/quarto-contrib/shinylive-0.9.0/shinylive/shinylive.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/shinylive-quarto-css/shinylive-quarto.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Learning Shiny</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Tips for Implementing Custom Features in Shiny</h1>
+<p class="subtitle lead">Level-Up Your Shiny Code for Maintainability and Reusability</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Daniel Chen </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!--
+Who is this for?
+why do they care?
+-->
+<p>Earlier this year, I wanted to create a data explorer app using Shiny for Python. You see this kind of application a lot on government data portals. There are data visualizations, components to filter the data, the raw data itself, and be able to download the final data set so you can use it locally.</p>
+<p>Shiny did not have the type of filtering behavior I wanted, so I needed to build my own. I got the opportunity to work with Joe Cheng at Posit to learn about building software and shiny modules. The <code>shiny_adaptive_filter</code> is available as a solution to the filtering problem you can install and try in other contexts. Skip to the end for an example and install instructions.</p>
+<p>Here’s a few tips I learned through the process to level-up your Shiny code to be more maintainable and reusable.</p>
+<ol type="1">
+<li>Keep variable types consistent</li>
+<li>Use Python type hints</li>
+<li>Know When You Should Use Shiny Modules</li>
+<li>Make your shiny app testable</li>
+<li>Think about the developer experience</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If you are new to Shiny Modules you can read about them in the <a href="https://shiny.posit.co/py/docs/modules.html">Shiny Modules</a> learning page.</p>
+</div>
+</div>
+<!-- BREAK -->
+<section id="background" class="level2">
+<h2 class="anchored" data-anchor-id="background">Background</h2>
+<p>One part that always bothered me when using components to interactively filter a data set was that, nothing prompted me about which filter options were valid as I was interacting with the application. I would frequently end up choosing a combination of filters that would return an empty dataframe. Clicking around and not knowing you would end up with an empty dataframe was a bit jarring. A big chunk of my interface would <em>just disappear</em>.</p>
+<p>The current set of shiny filters and the way most shiny apps are written have all the filtering components <code>and</code> each other to filter the data. This is why it will return an empty dataframe.</p>
+<p>What I wanted were filters that were aware of what the other filters were doing, and update their own values that <em>adapts</em> to the other filters. There was no way to do this in Shiny for Python out-of-the box, so I had to go and implement the feature on my own, and hopefully be able to share it with everyone else.</p>
+<!--
+Don't think i need this section anymore
+### Implementation
+
+There will be another post about the actual adaptive filters,
+its implementation,
+and usage,
+but for now, here are the two main ideas of what
+
+1. We tracked which index values (`df.index`) matched each filter and used
+   that index of values to subset the data (`df.loc[filter_index]`).
+   Once we calculated the correct index values we needed across all the filters,
+   we could use those values to filter our data,
+   and abstract away the implementation details on how the correct index was calculated
+   and how the filters will behave.
+2. We would want all filters to have this adaptive behavior
+-->
+</section>
+<section id="tip-1-keep-variable-types-consistent" class="level2">
+<h2 class="anchored" data-anchor-id="tip-1-keep-variable-types-consistent">Tip 1: Keep Variable Types Consistent</h2>
+<!--
+Goal is to show that I too can make bad programming decisions
+and also follow iterative improvements as I write code.
+
+The goal is overtime, you will have to do these kinds of
+re-writes less because you can naturally do the correct thing
+right away
+-->
+<p>As a data scientist, we typically write code in some kind of pipeline. So, we end up making sequential modifications to a variable. My advice, do not reuse the same variable names, especially if you are going to be changing the variable’s type throughout the code. It adds to cognitive load when trying to understand the implementation and also makes it a bit harder to reason about during maintenance.</p>
+<section id="example" class="level4">
+<h4 class="anchored" data-anchor-id="example">Example</h4>
+<!--
+When you write your own functions,
+sometimes the data type that is the input of your function
+is not entirely in you control.
+You just need to deal with what the rest of the program is using.
+-->
+<!--
+We know that some form of `and`-ing the filter values will be needed
+in this process.
+This behavior is an _intersection_ of all the indices from
+each of the filters.
+
+Here's the actual code snippet I wrote to get the process working.
+-->
+<p>Here’s an actual example of the code I wrote that illustrates this point. I want to take the intersection of data frame index values so I can get a final index of values I can use to subset my dataframe that represents the choices the user selected in my filter components.</p>
+<p>The function does these steps</p>
+<ol type="1">
+<li>Get the dataframe</li>
+<li>Get the index of the dataframe</li>
+<li>Convert the index to a <code>set</code></li>
+<li>Perform the set intersection</li>
+<li>Return a <code>list</code> of the values</li>
+</ol>
+<div id="ba78ca17" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb1" data-source-line-numbers="nil" data-code-line-numbers="3,4,8,12,14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="at">@reactive.calc</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> filter_idx():</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> df_tips() </span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    idx <span class="op">=</span> <span class="bu">set</span>(df.index) </span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">input</span>.filter_day():</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        current_idx <span class="op">=</span> df.loc[df[<span class="st">"day"</span>].isin(<span class="bu">input</span>.filter_day())].index</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        idx <span class="op">=</span> idx.intersection(<span class="bu">set</span>(current_idx)) </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">input</span>.filter_time():</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        current_idx <span class="op">=</span> df.loc[df[<span class="st">"time"</span>].isin(<span class="bu">input</span>.filter_time())].index</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        idx <span class="op">=</span> idx.intersection(<span class="bu">set</span>(current_idx)) </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">list</span>(idx) <span class="co"># list because .loc[] would return TypeError</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<!--
+My thought process at the time was
+python `lists` do not have a way to find the intersection
+of each other without writing a loop or comprehension,
+but `set` objects do have an `.intersection()` method.
+We could have sets do all the index calculation for us and return that
+for the rest of the application.
+
+
+
+Other than the first step of getting the dataframe,
+all the other steps involve the variable we need for the final
+return value.
+-->
+<p>The <code>idx</code> variable undergoes 3 type changes, <code>index</code>, <code>set</code>, and <code>list</code>!</p>
+<!--
+We had to convert to a list because we would get a `TypeError`
+when trying to filter using a `set`.
+
+```python
+TypeError: Passing a set as an indexer is not supported. Use a list instead.
+```
+
+::: {.callout}
+> There must be a better way!
+> - Raymond Hettinger
+:::
+-->
+<p>If you just plan to use this function (technically a <code>@reactive.calc</code>), you would only care that it returns something that you can use to subset a dataframe with. That’s the benefit of abstraction, but as someone who will maintain the code base, and in my case pair-programming, it makes the <em>implementation</em> extremely hard to follow.</p>
+<p>Turns out pandas <code>Index</code> objects, have an <code>.intersection()</code> method. So, no reason to convert to a <code>set</code>, and we can implement everything we need with the same data type.</p>
+<div id="9fd865e0" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb2" data-source-line-numbers="nil" data-code-line-numbers="3,4,8,12,14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@reactive.calc</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> filter_idx():</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> df_tips() </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    idx <span class="op">=</span> df.index </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">input</span>.filter_day():</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        current_idx <span class="op">=</span> df.loc[df[<span class="st">"day"</span>].isin(<span class="bu">input</span>.filter_day())].index</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        idx <span class="op">=</span> idx.intersection(current_idx) </span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">input</span>.filter_time():</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        current_idx <span class="op">=</span> df.loc[df[<span class="st">"time"</span>].isin(<span class="bu">input</span>.filter_time())].index</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        idx <span class="op">=</span> idx.intersection(current_idx) </span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> idx </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Much better! No more getting values of one type, and doing inline type conversions to make a calculation and returning an entirely different type. This makes the implementation much easier to reason with, and if you’re skimming the code to track a bug, you won’t miss the <code>set()</code> and <code>list()</code> calls.</p>
+</section>
+</section>
+<section id="tip-2-use-python-type-hints" class="level2">
+<h2 class="anchored" data-anchor-id="tip-2-use-python-type-hints">Tip 2: Use Python Type Hints</h2>
+<p><a href="https://docs.python.org/3/library/typing.html">Python Type hints</a> are a way where you can quickly see what datatype you are working with. Especially when your code base is a bit larger and you need to know what the inputs and outputs of a function are.</p>
+<p>You won’t need to rely on duck typing and “hope for the best”. Your intensions are clear. The problem I encountered from the previous issue, can be mitigated by writing the code better, but adding type hints can help with larger code bases when you are working with different types.</p>
+<p>Python is a dynamically typed language, variables do not need explicit type declarations. This is where Python’s “duck typing” comes from, and is what makes python flexible as a scripting language, but can make it more difficult to understand and maintain in larger projects.</p>
+<p>Python type hints were introduced in <a href="https://peps.python.org/pep-0484/">PEP 484</a> and implemented in Python 3.5. They help address duck typing ambiguity with type annotations. Type hints specify the expected types for variables, function arguments, and return values. Type hints don’t enforce types at runtime (you can even put in incorrect types). They can serve as documentation, improve code readability, and enable tools to catch type-related errors.</p>
+<section id="pyright" class="level3">
+<h3 class="anchored" data-anchor-id="pyright">Pyright</h3>
+<p><a href="https://microsoft.github.io/pyright/">Pyright</a> and <a href="https://mypy-lang.org/">Mypy</a> are two of the more popular static type checkers for Python. The Shiny team uses Pyright in <code>strict</code> mode in their code base. Sometimes you need to go out of your way to make the type checker happy. But, the benefit is you get complete type safety and will see warnings as you work. This makes your code much easier to maintain, bring on new people, and reason with as your are working on different parts of the codebase.</p>
+<section id="examples" class="level4">
+<h4 class="anchored" data-anchor-id="examples">Examples</h4>
+<p>Here are 2 different examples of basic type hints in Python</p>
+<section id="warns-you-about-variable-redeclaration" class="level5">
+<h5 class="anchored" data-anchor-id="warns-you-about-variable-redeclaration">Warns You About Variable Redeclaration</h5>
+<p>If you end up completely redefining the type of a variable with the same name (not exactly the same situation from Tip 1), you will get a <code>reportRedeclaration</code> message from the type checker.</p>
+<div id="6245fd94" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb3" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> __future__ <span class="im">import</span> annotations</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>idx_int: pd.Index[Any] <span class="op">=</span> pd.Index([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]) <span class="co"># reportRedeclaration here</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>idx_int: pd.Index[<span class="bu">int</span>] <span class="op">=</span> pd.Index([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You may need the <code>from __future__ import annotations</code> at the top of your python file. This allows type hints to be stored as strings rather than immediately being evaluated. Without it, you may get a <code>TypeError</code>, in this specific example, you would can get a <code>TypeError: type 'Index' is not subscriptable</code> message.</p>
+</section>
+<section id="turn-off-specific-warnings" class="level5">
+<h5 class="anchored" data-anchor-id="turn-off-specific-warnings">Turn Off Specific Warnings</h5>
+<p>Sometimes things are out of your control, and you will manually need to turn off a warning. One example comes from <code>pandas</code>, where I used their functions to determine the <code>dtype</code> of a <code>Series</code>.</p>
+<div class="sourceCode" id="cb4" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pandas.api.types <span class="im">import</span> is_numeric_dtype, is_string_dtype</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Pyright reports a <code>reportUnknownVariableType</code> error, and there is not much I can do to fix this error without making a change to the main <code>pandas</code> library, or <a href="https://pypi.org/project/pandas-stubs/">pandas-stubs</a>.</p>
+<p>Pyright 1.1.229+ supports suppressing individual diagnostics</p>
+<div class="sourceCode" id="cb5" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># pyright: ignore [reportUnknownVariableType]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+</section>
+<section id="cast" class="level3">
+<h3 class="anchored" data-anchor-id="cast">Cast</h3>
+<p>The <code>cast()</code> function is used when you know (or assume) that a variable is of a specific type, even if Python or a static type checker might not infer it directly. You do need to be careful when using <code>cast()</code>, since you are intensionally making an assumption about the variable type, and if you get it wrong, it would be difficult to track down the bug.</p>
+<section id="example-1" class="level4">
+<h4 class="anchored" data-anchor-id="example-1">Example</h4>
+<p>One example that was used in the <code>adaptive_filter</code> codebase was telling Pyright the type of data stored in the dataframe index. We used a function to return the index of a dataframe to make sure the type checker understands the data type stored.</p>
+<div id="814b72a6" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb6" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Any, cast</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> return_index(df: pd.DataFrame) <span class="op">-&gt;</span> <span class="st">"pd.Index[Any]"</span>:</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> cast(<span class="st">"pd.Index[Any]"</span>, df.index)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now anywhere we would normally call <code>df.index</code> we would now call <code>return_index(df)</code></p>
+</section>
+</section>
+<section id="typevar-and-generics" class="level3">
+<h3 class="anchored" data-anchor-id="typevar-and-generics">TypeVar and Generics</h3>
+<p><code>TypeVar</code> and <code>Generic</code>s are tools in the python typing system that allows you to create more flexible (i.e., “generic”) type hints where you can put in a placeholder for a types and delay specifying the actual type later on, while still maintaining type safety.</p>
+<p>If you are familiar with object oriented programming (OOP), inheriting objects from a common base class, or abstract base class (<code>abc</code>), then <code>TypeVar</code> and <code>Generic</code>s are how you will add type hints to your base class.</p>
+<section id="example-2" class="level4">
+<h4 class="anchored" data-anchor-id="example-2">Example</h4>
+<p>In our adaptive filter module, we had an <code>abc</code> for a <code>BaseFilter</code> class, One of the methods in the <code>abc</code> returns needs to return values from a filter component, but depending on the data stored in the filter, it may return values as a <code>str</code> or <code>int</code>.</p>
+<div class="sourceCode" id="cb7" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> abc <span class="im">import</span> ABC</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> TypeVar, Generic, Iterable</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>T <span class="op">=</span> TypeVar(<span class="st">"T"</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BaseFilter(ABC, Generic[T]):</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> _get_input_value(<span class="va">self</span>) <span class="op">-&gt;</span> Iterable[T] <span class="op">|</span> <span class="va">None</span>:</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>When we go implement each object that inherits from <code>BaseFilter</code>, we can pass in the actual type that <code>T</code> was used as a placeholder.</p>
+<div class="sourceCode" id="cb8" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># class that can deal with categorical variables stored as a string</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FilterCatStringSelect(BaseFilter[<span class="bu">str</span>]):</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+</section>
+<section id="tip-3-know-when-you-should-use-shiny-modules" class="level2">
+<h2 class="anchored" data-anchor-id="tip-3-know-when-you-should-use-shiny-modules">Tip 3: Know When You Should Use Shiny Modules</h2>
+<p><a href="https://shiny.posit.co/py/docs/modules.html">Shiny modules</a> are used to follow the DRY (Don’t Repeat Yourself) principle. The same concept of creating functions so you can abstract away and reuse computations, is a similar concept of shiny modules. The term “module” in Python typically refers to a <code>.py</code> file that contains python functions that get imported into a file. While “shiny modules” are typically <code>.py</code> files that get imported into the app, the term “shiny module” is not synonymous with a regular “module”. “Shiny modules” are specifically used in a shiny for Python application to encapsulate reactive components in a namespace to avoid namespace clashing of the component <code>id</code> because each component in shiny <strong>must</strong> have a unique <code>id</code>.</p>
+<p>Writing functions isn’t the only way you can reduce repeated code. <code>for</code> loops are another common way to write code to reuse a common code base for repeated actions. So how do you know when you need to refactor your code into shiny modules? What “code smells” should you look out for?</p>
+<section id="tracking-lists-of-component-values" class="level3">
+<h3 class="anchored" data-anchor-id="tracking-lists-of-component-values">Tracking List(s) of Component Values</h3>
+<p>If you find yourself in any of the following situations, you may want to think about refactoring your code into a shiny module.</p>
+<ul>
+<li>Calling the same component creating function multiple times.</li>
+<li>Creating a list of <code>id</code> values and iterating over and calling a function that makes a component.</li>
+<li>Creating at least 2 lists that track the <code>id</code> and some other input for the component.
+<ul>
+<li>For example a separate list for the <code>id</code> or <code>label</code>, but can also include things like a column name of a dataframe.</li>
+</ul></li>
+<li>Iterating across lists(s) to ensure inputs are captured together
+<ul>
+<li>Especially if you find your self using the <code>zip()</code> function</li>
+</ul></li>
+</ul>
+<section id="example-3" class="level4">
+<h4 class="anchored" data-anchor-id="example-3">Example</h4>
+<p>In the adaptive filter module, the initial implementation tracked 3 things: <code>id</code>, column name, and type of variable stored in the column.</p>
+<div id="e94efe21" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb9" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>filters <span class="op">=</span> [<span class="st">"filter_size"</span>, <span class="st">"filter_id"</span>, <span class="st">"filter_total_bill"</span>]</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>cols <span class="op">=</span> [<span class="st">"size"</span>, <span class="st">"id"</span>, <span class="st">"total_bill"</span>]</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>col_types <span class="op">=</span> [<span class="st">"cat"</span>, <span class="st">"cat"</span>, <span class="st">"sliders"</span>]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> fltr, col, col_type <span class="kw">in</span> <span class="bu">zip</span>(filters, cols, col_types):</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>All 3 bits of information needed to be tracked together.</p>
+<ul>
+<li><code>filters</code>: get the user inputs from the <code>ui</code>.</li>
+<li><code>cols</code>: tied to the <code>filters</code> variable, and used to extract the corresponding column from the data.</li>
+<li><code>col_type</code>: determine how the data needed to be filtered. For example, <code>selectize</code> components <em>always</em> return values as a list of strings (<code>List[str]</code>), and needed to be converted to a numeric type to filter the data.</li>
+</ul>
+<p>From a maintenance and end user perspective, knowing the column name should be enough to figure out the rest of the parts. As long as your provide a way for the end user to override any default, the code as written forces them to manually track a lot of unnecessary information for their own application.</p>
+</section>
+</section>
+<section id="complex-and-interweaved-behaviors" class="level3">
+<h3 class="anchored" data-anchor-id="complex-and-interweaved-behaviors">Complex and Interweaved Behaviors</h3>
+<p>The previous “code smells” are listed in the <a href="https://shiny.posit.co/py/docs/modules.html">Shiny for Python modules documentation</a>, but there are other ways you may want to consider whether or not you need modules.</p>
+<ul>
+<li>Dynamically creating component <code>id</code>s without fear of clashing with the main application.</li>
+<li>Complex/complicated operations that are specific to a function and requires multiple other <code>@reactive</code> intermediate steps.</li>
+<li>Coupling: where adding another feature into the application requires changing the codebase in many parts of the application in both the <code>server()</code> and <code>ui</code>.</li>
+</ul>
+<p>When you create a module, you specifically create a namespace for all the components inside. Whatever <code>id</code> names and calculations you need are all in their own namespace.</p>
+<section id="example-4" class="level4">
+<h4 class="anchored" data-anchor-id="example-4">Example</h4>
+<p>Using the same code example from above, we are manually tracking 3 parts for each component.</p>
+<div id="be450adb" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb10" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>filters <span class="op">=</span> [<span class="st">"filter_size"</span>, <span class="st">"filter_id"</span>, <span class="st">"filter_total_bill"</span>]</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>cols <span class="op">=</span> [<span class="st">"size"</span>, <span class="st">"id"</span>, <span class="st">"total_bill"</span>]</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>col_types <span class="op">=</span> [<span class="st">"cat"</span>, <span class="st">"cat"</span>, <span class="st">"sliders"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If we are giving just the column name, <code>cols</code>, we can automatically create the <code>id</code> by prepending the <code>filter_</code> string. We can run into a risk that if this component was just a function, it will clash with an existing <code>id</code> by the end user, e.g., what if they already have a <code>filter_size</code> component <code>id</code> for something else? If you think the answer is to add more underscores <code>_</code> to the <code>id</code> name, and create something like <code>_filter__size</code>, then you really need to encapsulate the function into a module.</p>
+<p>By default, we don’t really need the end user to provide anything, just the dataframe is enough to get the <code>cols</code> value, from there we can generate the <code>filters</code> list, and we can write out own function that calculates a <code>col_types</code>. We talk more about user overrides in Tip 5, for now let’s assume we only have 3 columns in our entire data set. All 3 of those calculations can be done in separate <code>@reactive</code> calls. A module will be able to abstract away all these calculations outside the main <code>app.py</code>, and make the main application easier to maintain.</p>
+<p>Finally, if we wanted to add another adaptive filter component into the application, we need to track the information in <em>at least</em> 3 places:</p>
+<div class="sourceCode" id="cb11" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># in the server function of the application</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>current_ids <span class="op">=</span> df.loc[df[col].isin(filter_value)].index</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># in one of the helper functions</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> is_string_dtype(col):</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">"cat_str"</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co"># in the server and/or ui of the application</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>ui.output_ui(<span class="st">"table_size_filter"</span>),</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="at">@render.ui</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> table_id_filter():</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ui.input_selectize(</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">"filter_id"</span>,</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"id filter:"</span>,</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>        <span class="bu">sorted</span>(df_tips()[<span class="st">"id"</span>].unique().tolist()),</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>        multiple<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>        remove_button<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>        options<span class="op">=</span>{<span class="st">"plugins"</span>: [<span class="st">"clear_button"</span>]},</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Just needing to create a new component, or new component type requires the user to change the code many locations in the application. Forgetting to change any one of the locations is a common mistake, and can be easily forgotten. As the application grows, the places where the codebase needs to be updated to incorporate new features will be farther apart, i.e., more lines of code between needed changes. Creating a module can keep the <strong>coupling</strong> of code closer together, so making changes or extensions is easier.</p>
+</section>
+</section>
+</section>
+<section id="tip-4-make-your-shiny-app-testable" class="level2">
+<h2 class="anchored" data-anchor-id="tip-4-make-your-shiny-app-testable">Tip 4: Make Your Shiny App Testable</h2>
+<p>Testing is always a good idea. When working with shiny you want to split up functions that require shiny end-to-end and behavior testing, with your main logic.</p>
+<p>Not everything needs to be in the server function, and not everything needs to be inside a reactive. You can still call regular python functions, so when possible, write regular functions and call them in a reactive. If you have written unit tests before or used the <code>assert</code> statement, then you can still write tests for your Shiny application.</p>
+<section id="testing-functions-with-pytest" class="level3">
+<h3 class="anchored" data-anchor-id="testing-functions-with-pytest">Testing Functions with pytest</h3>
+<p>If you are able to refactor your code into individual non-reactive functions, you can leverage the larger unit testing infrastructure python provides, e.g., <a href="https://docs.pytest.org/en/stable/">pytest</a> This is a great general shiny tip, where you can and should be able to create helper functions completely outside of any <code>@reactive</code> context, and then call the function inside a <code>@reactive</code>.</p>
+<section id="example-5" class="level4">
+<h4 class="anchored" data-anchor-id="example-5">Example</h4>
+<p>Here is a helper function that was used in our adaptive filters module, It takes in a list of pandas <code>Index</code> objects, and finds the <code>.intersection()</code> across all the objects. This calculation is used many times throughout the application. It also makes a few data checks beforehand (expressed by the <code>...</code> in the code below).</p>
+<div id="a1dbdb8d" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb12" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> index_intersection_all(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    to_intersect: List[<span class="st">"pd.Index[Any] | None"</span>],</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    default: <span class="st">"pd.Index[Any]"</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="st">"pd.Index[Any]"</span>:</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    intersection <span class="op">=</span> intersect[<span class="dv">0</span>]</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> index <span class="kw">in</span> intersect:</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        intersection <span class="op">=</span> intersection.intersection(index)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> intersection</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can test this function like a regular Python function.</p>
+<div id="93199b5c" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb13" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>idx1 <span class="op">=</span> pd.Index([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>])</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>idx2 <span class="op">=</span> pd.Index([<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">6</span>])</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>idx3 <span class="op">=</span> pd.Index([<span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">6</span>, <span class="dv">7</span>])</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>default <span class="op">=</span> pd.Index([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">6</span>, <span class="dv">7</span>])</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_index_intersection_all():</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    to_intersect <span class="op">=</span> [idx1, idx2, idx3]</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    expected <span class="op">=</span> pd.Index([<span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>])</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    calculated <span class="op">=</span> index_intersection_all(</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        to_intersect,</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>        default<span class="op">=</span>default,</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> (calculated <span class="op">==</span> expected).<span class="bu">all</span>()</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> calculated.equals(expected)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You can then leverage all the benefits and tools from <code>pytest</code> in testing your shiny application and/or shiny module, including <a href="https://docs.pytest.org/en/6.2.x/fixture.html">test fixtures</a>.</p>
+</section>
+</section>
+<section id="playwright" class="level3">
+<h3 class="anchored" data-anchor-id="playwright">Playwright</h3>
+<p>Testing the reactivity and end-to-end behavior in Shiny for Python is limited to <a href="https://playwright.dev/python/">Playwright</a>. The Shiny for Python documentation has an article on <a href="https://shiny.posit.co/py/docs/end-to-end-testing.html">End-to-end testing</a> for Shiny. You can run your end-to-test testing with <code>pytest</code> and <code>playwright</code> with</p>
+<div class="sourceCode" id="cb14" data-code-line-numbers=""><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install pytest pytest-playwright</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>You are a bit limited to the capabilities of Playwright, but Shiny does have a few wrappers for playwright that makes it easier for you to test your application.</p>
+<p>First, Shiny provides you a <code>controller</code> object. This provides you a more convenient way of finding input or output components by the <code>id</code> that was used in the application.</p>
+<div class="sourceCode" id="cb15" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny.playwright <span class="im">import</span> controller</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>From there, you can use the <a href="https://shiny.posit.co/py/api/testing/">Shiny Testing API docs</a> to find the corresponding component in your application that you want to test. For example, this is the documentation for the <a href="https://shiny.posit.co/py/api/testing/playwright.controller.InputSelectize.html#shiny.playwright.controller.InputSelectize">InputSelectize playwright controller</a>.</p>
+<p>We then create our test app and test function. This will run the shiny application in a single browser tab, and then go to the app URL.</p>
+<div class="sourceCode" id="cb16" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny.run <span class="im">import</span> ShinyAppProc</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> playwright.sync_api <span class="im">import</span> Page</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny.pytest <span class="im">import</span> create_app_fixture</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> create_app_fixture(<span class="st">"app.py"</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_basic_app(page: Page, app: ShinyAppProc):</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    page.goto(app.url)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>From there we can use various <code>.set()</code>, <code>.expect_*()</code>, methods from the controller components to modify the application and test the results.</p>
+<p>The tests will run through <code>pytest</code>.</p>
+<div class="sourceCode" id="cb17" data-code-line-numbers=""><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pytest</span> .</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>You do have the option to set different browsers and also headlessly (default) or headed (by passing <code>--headed</code>). Changing browsers and the “headedness” can help see if your issue is specific to the application or with the browser.</p>
+<div class="sourceCode" id="cb18" data-code-line-numbers=""><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pytest</span> . <span class="at">--browser</span> chromium <span class="at">--headed</span> <span class="co"># chromium also headed</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pytest</span> . <span class="at">--browser</span> firefox <span class="co"># firefox</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pytest</span> . <span class="at">--browser</span> webkit <span class="co"># webkit/safari</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="example-6" class="level4">
+<h4 class="anchored" data-anchor-id="example-6">Example</h4>
+<p>Here’s an example of a test we used in a simple adaptive filter application.</p>
+<div class="sourceCode" id="cb19" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny.playwright <span class="im">import</span> controller</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny.run <span class="im">import</span> ShinyAppProc</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> playwright.sync_api <span class="im">import</span> Page</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny.pytest <span class="im">import</span> create_app_fixture</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> create_app_fixture(<span class="st">"app.py"</span>)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_basic_app(page: Page, app: ShinyAppProc):</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    page.goto(app.url)</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    selectize_day <span class="op">=</span> controller.InputSelectize(page, <span class="st">"adaptive-filter_day"</span>)</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    selectize_day.<span class="bu">set</span>(<span class="st">"Fri"</span>)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    selectize_day.expect_selected([<span class="st">"Fri"</span>])</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    selectize_time <span class="op">=</span> controller.InputSelectize(page, <span class="st">"adaptive-filter_time"</span>)</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    selectize_time.expect_choices([<span class="st">"Dinner"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Since the adaptive filters are created within a shiny module, we have to be mindful of the <code>id</code> given for the module’s namespace. The actual component will be the given <code>id</code> followed by a dash, <code>-</code>, then whatever <code>id</code> was used for the component inside the shiny module.</p>
+<p>For example, if we called the module with the <code>adaptive</code> <code>id</code>,</p>
+<div class="sourceCode" id="cb20" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>filter_return <span class="op">=</span> adaptive_filter_module.filter_server(<span class="st">"adaptive"</span>, df<span class="op">=</span>tips)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>the component <code>id</code> of the application for the <code>day</code> column filter would be <code>adaptive-filter_day</code> because inside the module, our filter names use a <code>filter_colname</code> format.</p>
+<p>From there, we can test clicking on a day of the week using an adaptive filter, and checking to see if another filter’s values have changed to the selection.</p>
+</section>
+</section>
+</section>
+<section id="tip-5-think-of-the-developer-experience" class="level2">
+<h2 class="anchored" data-anchor-id="tip-5-think-of-the-developer-experience">Tip 5: Think of the Developer Experience</h2>
+<!--
+this is a bit of an art.
+and as an educator, i sometimes feel that many python packages assume
+you know how software development and coding working in python.
+
+this is especially the case when working with a DSL like the pydata stack.
+-->
+<p>People will only use your tools if you make it easy for them to use. This is a bit of an art, and every situation is going to be different.</p>
+<p>If this is code just for yourself, and only you will maintain a codebase in the future, then the user interface does not need to be as seamless. If you are going to put this codebase into the hands of other people, and you are trying to get people to adopt your tool, then you do not want to put any more hurdles in their way. You will also need to think about the skill of the average person who may use your tool.</p>
+<p>Shiny is a tool for data scientists, and because of data science’s popularity in the last decade, the training for a data scientist is not from software engineering and computer science.</p>
+<p>But when a tradeoff between convenience for the user, the future developer who will extend the library, yourself in the future, or the object oriented dogma. Sometimes it might be okay to sacrifice the dogma to make everything else convenient.</p>
+<!--
+partials
+lambdas
+tweak the code
+-->
+<section id="example-7" class="level4">
+<h4 class="anchored" data-anchor-id="example-7">Example</h4>
+<p>The filters will try its best to use simple heuristics to automatically return the correct filter type based on the contents of the column.</p>
+<p>We ended up writing the code, so the user can provide customizations in one of 3 ways:</p>
+<ul>
+<li>Remove a component with <code>None</code></li>
+<li>Specify a new label with just a string</li>
+<li>Override the default calculated component type by passing the object</li>
+<li>Provide a <code>label</code> parameter to a custom component type to rename the label</li>
+</ul>
+<p>Here’s an example of how the user can customize the components</p>
+<div class="sourceCode" id="cb21" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>override <span class="op">=</span> {</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"total_bill"</span>: <span class="va">None</span>,</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"day"</span>: <span class="st">"DAY!"</span>,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"time"</span>: shiny_adaptive_filter.FilterCatStringSelect(),</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"size"</span>: shiny_adaptive_filter.FilterCatNumericCheckbox(label<span class="op">=</span><span class="st">"Party Size"</span>),</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>All of the filters are documented in the module for the app author to look up, and provides an easy interface for them to use: the dictionary keys are the columns of the data set, and the values are any manual overrides the developer wants in their application.</p>
+<div class="sourceCode" id="cb22" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># in the ui</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>shiny_adaptive_filter.filter_ui(<span class="st">"adaptive"</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># in the server</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>adaptive_filters <span class="op">=</span> shiny_adaptive_filter.filter_server(</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"adaptive"</span>, df<span class="op">=</span>data, override<span class="op">=</span>override</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="co"># a reactive value that can be used anywhere else in the app</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>adaptive_filters_idx <span class="op">=</span> adaptive_filters[<span class="st">"filter_idx"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The implementation we used in adaptive filters uses an old C trick of having a <code>finish_init()</code> method that is run after the developer passes in the inputs for the constructor.</p>
+<div class="sourceCode" id="cb23" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BaseFilter(ABC, Generic[T]):</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, <span class="op">*</span>, label: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span> <span class="op">=</span> <span class="va">None</span>):</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>        ...</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> finish_init(</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>,</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>        data: Callable[[], pd.DataFrame] <span class="op">|</span> pd.DataFrame,</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>        <span class="bu">id</span>: <span class="bu">str</span>,</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>        column_name: <span class="bu">str</span>,</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>,</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>        session: Session <span class="op">|</span> <span class="va">None</span> <span class="op">=</span> <span class="va">None</span>,</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    ):</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>        ...</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This is so the user <em>only</em> needs to pass in the type of filter they want to override, or the component label that will be displayed in the application. This decision was made so it balances user convenience and developer convenience, but sacrifices on one of the dogmas of object oriented programming, where a valid object gets created, but still cannot be used until another method gets called. Anytime the filter constructor gets called with the user inputs, we <strong>must</strong> call the <code>.finish_init()</code> method to have a use able filter component object.</p>
+<div class="sourceCode" id="cb24" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>shiny_adaptive_filter.FilterCatStringCheckbox(label<span class="op">=</span>label)<span class="op">\</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    .finish_init(df, <span class="bu">id</span>, col_str, session<span class="op">=</span>session)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This tradeoff was made to avoid having the user pass in a <a href="https://docs.python.org/3/library/functools.html#functools.partial">partial</a> (aka currying) or <a href="https://docs.python.org/3/reference/expressions.html#lambda">lambdas</a>. Contrast the original <code>override</code> dictionary with either of the ones below, and you can see how sacrificing the object oriented dogma may be worth it to make the tool easier for users.</p>
+<div class="sourceCode" id="cb25" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> functools <span class="im">import</span> partial</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>override <span class="op">=</span> {</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># using a partial</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"time"</span>: partial(shiny_adaptive_filter.FilterCatStringCheckbox, label<span class="op">=</span><span class="st">"Time of Day"</span>),</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># using a lambda</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"size"</span>: <span class="kw">lambda</span> data, <span class="bu">id</span>, colname, session: shiny_adaptive_filter.FilterCatNumericCheckbox(data, <span class="bu">id</span>, colname, label<span class="op">=</span><span class="st">"Time of Day"</span>, session<span class="op">=</span>session),</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="conclusion" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>I like to remind my student students that just because the code works without error, doesn’t mean it’s correct, and just because it’s correct, doesn’t mean you can’t improve it.</p>
+<p>I wanted a shiny app to have filter behaviors that did not exist and set off creating a custom implementation to be able to share with others. This lead me to create custom filtering component behaviors, refactoring them into shiny modules, and creating a python package to share with others. Along the way I got help from Joe Cheng, CTO at Posit, PBC and one of the main authors of Shiny, who taught me how to take my original proof of concept code, and make it respectable from a software engineering point of view. Can the codebase be improved? Absolutely. But I hope the tips in this post can help level up your software engineering skills as a data scientist.</p>
+<p>Here’s a minimal example of the adaptive filters at work. Set the <code>day</code> checkbox to <code>Fri</code> and see how the other filters “adapt” to the results. If you want to give it a try yourself, you can install the filters from PyPI.</p>
+<div class="sourceCode" id="cb26" data-code-line-numbers=""><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install shiny_adaptive_filter</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="column-screen-inset">
+<pre class="shinylive-python" data-engine="python" data-code-line-numbers="27,28,29,30,32"><code>#| standalone: true
+#| components: [editor, viewer]
+#| viewerHeight: 700
+
+import pandas as pd
+from shiny import App, render, reactive, ui
+
+import shiny_adaptive_filter as saf
+
+app_ui = ui.page_sidebar(
+    ui.sidebar(
+        saf.filter_ui("adaptive"),
+    ),
+    ui.output_data_frame("render_df"),
+)
+
+def server(input, output, session):
+    @reactive.calc
+    def data_filtered():
+        df = tips.loc[filter_idx()]
+        return df
+
+    @render.data_frame
+    def render_df():
+        return render.DataGrid(data_filtered())
+
+    override = { 
+        "total_bill": None, 
+        "tip": saf.FilterNumNumericRange(), 
+        "day": "Day of Week", 
+        "size": saf.FilterCatNumericCheckbox(label="Party Size"),
+    } 
+
+    filter_return = saf.filter_server(
+        "adaptive",
+        df=tips,
+        override=override,
+    )
+    filter_idx = filter_return["filter_idx"]
+
+data = {
+    'total_bill': [16.99, 10.34, 21.01, 23.68, 24.59],
+    'tip': [1.01, 1.66, 3.50, 3.31, 3.61],
+    'sex': ['Female', 'Male', 'Male', 'Male', 'Female'],
+    'smoker': ['No', 'No', 'No', 'No', 'Yes'],
+    'day': ['Sun', 'Sun', 'Sun', 'Fri', 'Sun'],
+    'time': ['Lunch', 'Dinner', 'Dinner', 'Dinner', 'Dinner'],
+    'size': [2, 3, 3, 2, 4]
+}
+
+tips = pd.DataFrame(data)
+
+app = App(app_ui, server)
+
+
+## file: requirements.txt
+shiny_adaptive_filter</code></pre>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/chendaniely\.github\.io\/dan-joe-shiny\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+<script src="../../site_libs/quarto-contrib/line-highlight-1.0.0/line-highlight.js" defer="true"></script>
+</body></html>

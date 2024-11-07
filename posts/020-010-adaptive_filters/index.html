@@ -76,9 +76,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 <link href="../../site_libs/quarto-contrib/line-highlight-1.0.0/line-highlight.css" rel="stylesheet">
 <meta name="shinylive:serviceworker_dir" content="../..">
-<script src="../../site_libs/quarto-contrib/shinylive-0.7.0/shinylive/load-shinylive-sw.js" type="module"></script>
-<script src="../../site_libs/quarto-contrib/shinylive-0.7.0/shinylive/run-python-blocks.js" type="module"></script>
-<link href="../../site_libs/quarto-contrib/shinylive-0.7.0/shinylive/shinylive.css" rel="stylesheet">
+<script src="../../site_libs/quarto-contrib/shinylive-0.9.0/shinylive/load-shinylive-sw.js" type="module"></script>
+<script src="../../site_libs/quarto-contrib/shinylive-0.9.0/shinylive/run-python-blocks.js" type="module"></script>
+<link href="../../site_libs/quarto-contrib/shinylive-0.9.0/shinylive/shinylive.css" rel="stylesheet">
 <link href="../../site_libs/quarto-contrib/shinylive-quarto-css/shinylive-quarto.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
@@ -188,16 +188,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<p>One of the main limitations when trying to use Shiny components to filter a dataframe is the filters mainly work in an <code>and</code> operator on the data. This means that when you are trying to use interactively explore your data, you will inevitably end up selecting a combination of filter values that will return an empty dataframe.</p>
-<p>We have created a new set of shiny selectize and checkbox filters to help you with these kinds of interactive data filtering tasks.</p>
+<p>One limitation when trying to use Shiny components to filter a dataframe is the components mainly work in an <code>and</code> operator on the data. This means that when you are trying to interactively explore your data, you will inevitably end up selecting a combination of filter values that will return an empty dataframe.</p>
+<p>This package implements a new set of shiny selectize, checkbox, and slider components to help you with these kinds of interactive data filtering tasks.</p>
+<p>You can install it on from PyPI.</p>
 <div class="sourceCode" id="cb1" data-code-line-numbers=""><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install shiny_adaptive_filter</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Take a look at an example application using the new filters.</p>
-<hr>
 <section id="the-problem" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="the-problem">The Problem</h2>
-<!-- BREAK -->
-<p>Imagine this small tips dataset</p>
-<div id="c8d2d229" class="cell" data-execution_count="1">
+<p>Let’s illustrate the limitation the current components have and how it can lead to subsetting an empty dataframe. Imagine this small tips dataset.</p>
+<div id="877548be" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -289,8 +287,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>In shiny, you will typically create separate input components for each column you want the user to interact with and filter down the data. If we made filters for all the categorical variables and wanted to filter the <code>day</code> variable down to <code>Fri</code>.</p>
-<div id="c91cc00b" class="cell" data-execution_count="2">
+<p>In shiny, you will typically create a separate input component for each column of the data. For example, if we created a <code>Day</code> component that filters the <code>day</code> variable down to <code>Fri</code>. we would be left with one row of data.</p>
+<div id="353d3a68" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>tips.loc[tips[<span class="st">"day"</span>] <span class="op">==</span> <span class="st">"Fri"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -329,8 +327,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>Traditionally, your filter components will still have options for the entire dataframe, it does not react to the filters you already selected. In a traditional shiny application, you will still see <code>Lunch</code> in the <code>time</code> filter. This means the user can still select <code>Fri</code> and subsequently, <code>Lunch</code> and be left with an empty dataframe result.</p>
-<div id="b9396325" class="cell" data-execution_count="3">
+<p>Traditionally, your filter components will still have options for the entire dataframe, it does not react to the filters you already selected. For example, in a normal shiny application, you will still see <code>Lunch</code> in the <code>time</code> filter. This means the user can still select <code>Fri</code> and subsequently, <code>Lunch</code> and be left with an empty dataframe result. This empty dataframe result may not be what you want the end user to see.</p>
+<div id="f7beec1b" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tips.loc[(tips[<span class="st">"day"</span>] <span class="op">==</span> <span class="st">"Fri"</span>) <span class="op">&amp;</span> (tips[<span class="st">"time"</span>] <span class="op">==</span> <span class="st">"Lunch"</span>)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -360,8 +358,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p><br></p>
-<p>This empty dataframe result may not be what you want the end user to see.</p>
-<p>Here’s an example of the behavior in a simple app. Try Setting the filter for <code>Fri</code> and <code>Lunch</code>.</p>
+<p>Here’s an example shiny application showing this behavior. Try selecting both <code>Fri</code> and <code>Lunch</code>.</p>
 <div class="column-screen-inset">
 <pre class="shinylive-python" data-engine="python" data-code-line-numbers=""><code>#| standalone: true
 #| components: [editor, viewer]
@@ -384,17 +381,15 @@ tips = pd.DataFrame(data)
 
 app_ui = ui.page_sidebar(
     ui.sidebar(
-        ui.input_selectize(
+        ui.input_checkbox_group(
                 "filter_day",
-                "table day filter:",
-                tips["day"].unique().tolist(),
-                multiple=True,
+                "Day:",
+                {x:x for x in sorted(tips["day"].unique())},
         ),
-        ui.input_selectize(
+        ui.input_checkbox_group(
                 "filter_time",
-                "table time filter:",
-                tips["time"].unique().tolist(),
-                multiple=True,
+                "Time:",
+                {x:x for x in sorted(tips["time"].unique())},
         ),
     ),
     ui.output_data_frame("render_df"),
@@ -420,24 +415,37 @@ app = App(app_ui, server)
 </section>
 <section id="adaptive-filters" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="adaptive-filters">Adaptive Filters</h2>
-<p>The new adaptive filters change updates the values of the inputs so it “adapts” to all the filtering that is done to your data, while keeping the results for values you have already selected. We think this provides a better user experience when exploring data interactively.</p>
+<p>These new adaptive filters from this package change updates the values of the inputs so it “adapts” to all the filtering that is done to your data while keeping the results for values you have already selected. This can provide a better user experience when interactively exploring data.</p>
 <section id="installing-and-usage" class="level3 page-columns page-full">
 <h3 class="anchored" data-anchor-id="installing-and-usage">Installing and Usage</h3>
-<p>You can give the new components a try.</p>
+<p>You can give the new components a try by installing the package from PyPI.</p>
 <div class="sourceCode" id="cb6" data-code-line-numbers=""><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install shiny_adaptive_filter</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>To use the components you will need to import the shiny module</p>
 <div class="sourceCode" id="cb7" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shiny_adaptive_filter <span class="im">as</span> saf</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>You then pass the module id and data into the server module, and then place the UI where you want with the ui module.</p>
+<p>The package is a <a href="https://shiny.posit.co/py/docs/modules.html">shiny module</a>, so the main usage will be similar to other shiny modules</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A “shiny module” is not the same as a “python module”. To learn more about shiny modules see this page from the Shiny documentation: <a href="https://shiny.posit.co/py/docs/modules.html" class="uri">https://shiny.posit.co/py/docs/modules.html</a></p>
+</div>
+</div>
+<p>You place the UI where you want with the ui module and a module ID, and then then pass the same module ID into the server module. The server module also needs the dataframe to filter.</p>
 <div class="sourceCode" id="cb8" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># in the UI</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>saf.filter_ui(<span class="st">"adaptive"</span>) <span class="co"># filter UIs from the module</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># in the server function</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>adaptive_filters <span class="op">=</span> adaptive_filter_module.filter_server(</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"adaptive"</span>, <span class="co"># name of the module id</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        df<span class="op">=</span>tips, <span class="co"># dataframe (can also be a reactive)</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>The module returns an index of values that the application author can use to filter their data in a <code>@reactive.calc</code></p>
-<div class="sourceCode" id="cb9" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>adaptive_filters_idx <span class="op">=</span> adaptive_filters[<span class="st">"filter_idx"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>saf.filter_ui(<span class="st">"adaptive"</span>)  <span class="co"># filter UIs from the module</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># in the server function</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>adaptive_filters <span class="op">=</span> adaptive_filter_module.filter_server(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"adaptive"</span>,  <span class="co"># name of the module id</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    df<span class="op">=</span>tips,  <span class="co"># dataframe (can also be a reactive)</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The module returns a few things, the most important of which is an index of values, <code>"filter_idx"</code>, that the application author can use to filter their data in a <code>@reactive.calc</code>.</p>
+<div class="sourceCode" id="cb10" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>adaptive_filters_idx <span class="op">=</span> adaptive_filters[<span class="st">"filter_idx"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>You can now use the <code>adaptive_filters_idx()</code> reactive calc in the rest of your application to filter the data from the adaptive filters. In the application example below, now try selecting <code>Fri</code> and <code>Lunch</code>. You will notice the <code>Lunch</code> option disappear when <code>Fri</code> is selected, since the combination of the values is not valid.</p>
 <div class="column-screen-inset">
 <pre class="shinylive-python" data-engine="python" data-code-line-numbers="24,32,39,40,41,42,44"><code>#| standalone: true
@@ -489,8 +497,7 @@ app = App(app_ui, server)
 
 
 ## file: requirements.txt
-shiny_adaptive_filter
-</code></pre>
+shiny_adaptive_filter</code></pre>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -502,7 +509,7 @@ Note
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p><code>shiny_adaptive_filter</code> tries to pick a reasonable default component for you based on the data type and number of unique values. In this example, the <code>total_bill</code> and <code>tip</code> columns are <code>selectize</code> components because our example dataframe only has 5 rows of data.</p>
+<p><code>shiny_adaptive_filter</code> tries to pick a reasonable default component for you based on the data type and number of unique values. In this example, the <code>total_bill</code> and <code>tip</code> columns are <code>selectize</code> components because our example dataframe only has 5 rows of data. Normally these would be slider objects. We will talk about manual overrides next.</p>
 </div>
 </div>
 <section id="overrides" class="level4 page-columns page-full">
@@ -516,12 +523,12 @@ Note
 </ol>
 <p>We do this by creating a python dictionary where keys are the column names of the incoming dataframe that we want to target.</p>
 <p>We can turn “off” a filter by passing in <code>None</code> as the value. To change the filter type, we can pass in the filter constructor. If you want to change the filter label, pass in a string of the new label.</p>
-<div class="sourceCode" id="cb11" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>override <span class="op">=</span> {</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"total_bill"</span>: <span class="va">None</span>, <span class="co"># disable the total_bill column</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tips"</span>: saf.FilterNumNumericRange(), <span class="co"># use a different default filter</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"day"</span>: <span class="st">"Day of Week"</span>, <span class="co"># set custom component label</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"size"</span>: saf.FilterCatNumericCheckbox(label<span class="op">=</span><span class="st">"Party Size"</span>), <span class="co"># set component and label</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>override <span class="op">=</span> {</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"total_bill"</span>: <span class="va">None</span>, <span class="co"># disable the total_bill column</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tip"</span>: saf.FilterNumNumericRange(), <span class="co"># use a different default filter</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"day"</span>: <span class="st">"Day of Week"</span>, <span class="co"># set custom component label</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"size"</span>: saf.FilterCatNumericCheckbox(label<span class="op">=</span><span class="st">"Party Size"</span>), <span class="co"># set component and label</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="column-screen-inset">
 <pre class="shinylive-python" data-engine="python" data-code-line-numbers="27,28,29,30,32"><code>#| standalone: true
 #| components: [editor, viewer]
@@ -551,7 +558,7 @@ def server(input, output, session):
 
     override = { 
         "total_bill": None, 
-        "tips": saf.FilterNumNumericRange(), 
+        "tip": saf.FilterNumNumericRange(), 
         "day": "Day of Week", 
         "size": saf.FilterCatNumericCheckbox(label="Party Size"),
     } 
@@ -562,6 +569,88 @@ def server(input, output, session):
         override=override,
     )
     filter_idx = filter_return["filter_idx"]
+
+data = {
+    'total_bill': [16.99, 10.34, 21.01, 23.68, 24.59],
+    'tip': [1.01, 1.66, 3.50, 3.31, 3.61],
+    'sex': ['Female', 'Male', 'Male', 'Male', 'Female'],
+    'smoker': ['No', 'No', 'No', 'No', 'Yes'],
+    'day': ['Sun', 'Sun', 'Sun', 'Fri', 'Sun'],
+    'time': ['Lunch', 'Dinner', 'Dinner', 'Dinner', 'Dinner'],
+    'size': [2, 3, 3, 2, 4]
+}
+
+tips = pd.DataFrame(data)
+
+app = App(app_ui, server)
+
+
+## file: requirements.txt
+shiny_adaptive_filter&gt;=0.0.1.9004</code></pre>
+</div>
+</section>
+<section id="reset" class="level4 page-columns page-full">
+<h4 class="anchored" data-anchor-id="reset">Reset</h4>
+<p>This shiny module also returns a reset ability that removes all the selected options from all the adaptive filters. You can access it with the <code>"reset_all"</code> key.</p>
+<div class="sourceCode" id="cb14" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>adaptive_filters <span class="op">=</span> adaptive_filter_module.filter_server(</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"adaptive"</span>, df<span class="op">=</span>tips_original</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>adaptive_reset_all <span class="op">=</span> adaptive_filters[<span class="st">"reset_all"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>You can then use the <code>adaptive_reset_all()</code> to clear all the selections from the adaptive filters, typically this will be attached to a button that triggers an reactive event.</p>
+<div class="sourceCode" id="cb15" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># in the UI</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>ui.input_action_button(<span class="st">"reset"</span>, <span class="st">"Reset filters"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16" data-code-line-numbers=""><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># in the server function</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="at">@reactive.effect</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="at">@reactive.event</span>(<span class="bu">input</span>.reset)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _():</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    adaptive_reset_all()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This way you have the flexibility to incorporate resetting the adaptive filters along with any other behavior in the shiny application</p>
+<div class="column-screen-inset">
+<pre class="shinylive-python" data-engine="python" data-code-line-numbers="12,28,29,30,31,44"><code>#| standalone: true
+#| components: [editor, viewer]
+#| viewerHeight: 700
+
+import pandas as pd
+from shiny import App, render, reactive, ui
+
+import shiny_adaptive_filter as saf
+
+app_ui = ui.page_sidebar(
+    ui.sidebar(
+        ui.input_action_button("reset", "Reset filters"), 
+        saf.filter_ui("adaptive"),
+    ),
+    ui.output_data_frame("render_df"),
+)
+
+def server(input, output, session):
+    @reactive.calc
+    def data_filtered():
+        df = tips.loc[filter_idx()]
+        return df
+
+    @render.data_frame
+    def render_df():
+        return render.DataGrid(data_filtered())
+
+    @reactive.effect 
+    @reactive.event(input.reset) 
+    def _(): 
+        adaptive_reset_all() 
+
+    override = {
+        "total_bill": saf.FilterNumNumericRange(),
+        "tip": saf.FilterNumNumericRange(),
+    }
+
+    filter_return = saf.filter_server(
+        "adaptive",
+        df=tips,
+        override=override,
+    )
+    filter_idx = filter_return["filter_idx"]
+    adaptive_reset_all = filter_return["reset_all"] 
 
 data = {
     'total_bill': [16.99, 10.34, 21.01, 23.68, 24.59],
