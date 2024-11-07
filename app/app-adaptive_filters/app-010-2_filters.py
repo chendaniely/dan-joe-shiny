@@ -15,17 +15,15 @@ tips = pd.DataFrame(data)
 
 app_ui = ui.page_sidebar(
     ui.sidebar(
-        ui.input_selectize(
+        ui.input_checkbox_group(
                 "filter_day",
-                "table day filter:",
-                tips["day"].unique().tolist(),
-                multiple=True,
+                "Day:",
+                {x:x for x in sorted(tips["day"].unique())},
         ),
-        ui.input_selectize(
+        ui.input_checkbox_group(
                 "filter_time",
-                "table time filter:",
-                tips["time"].unique().tolist(),
-                multiple=True,
+                "Time:",
+                {x:x for x in sorted(tips["time"].unique())},
         ),
     ),
     ui.output_data_frame("render_df"),

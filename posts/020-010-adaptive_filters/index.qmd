@@ -12,28 +12,26 @@ filters:
 jupyter: python3
 ---
 
-One of the main limitations when trying to use Shiny components to filter a dataframe
-is the filters mainly work in an `and` operator on the data.
-This means that when you are trying to use interactively explore your data,
+One limitation when trying to use Shiny components to filter a dataframe
+is the components mainly work in an `and` operator on the data.
+This means that when you are trying to interactively explore your data,
 you will inevitably end up selecting a combination of filter values
 that will return an empty dataframe.
 
-We have created a new set of shiny selectize and checkbox filters to help you with
-these kinds of interactive data filtering tasks.
+This package implements a new set of shiny selectize, checkbox, and slider components
+to help you with these kinds of interactive data filtering tasks.
+
+You can install it on from PyPI.
 
 ```bash
 pip install shiny_adaptive_filter
 ```
 
-Take a look at an example application using the new filters.
-
----
-
 ## The Problem
 
-<!-- BREAK -->
-
-Imagine this small tips dataset
+Let's illustrate the limitation the current components have and how it
+can lead to subsetting an empty dataframe.
+Imagine this small tips dataset.
 
 ```{python}
 #| code-fold: true
@@ -54,10 +52,9 @@ tips = pd.DataFrame(data)
 tips
 ```
 
-In shiny, you will typically create separate input components for each column
-you want the user to interact with and filter down the data.
-If we made filters for all the categorical variables and wanted to filter the
-`day` variable down to `Fri`.
+In shiny, you will typically create a separate input component for each column of the data.
+For example, if we created a `Day` component that filters the `day` variable down to `Fri`.
+we would be left with one row of data.
 
 ```{python}
 #| code-fold: true
@@ -68,10 +65,11 @@ tips.loc[tips["day"] == "Fri"]
 Traditionally, your filter components will still have options for
 the entire dataframe,
 it does not react to the filters you already selected.
-In a traditional shiny application,
+For example, in a normal shiny application,
 you will still see `Lunch` in the `time` filter.
 This means the user can still select `Fri` and subsequently,
 `Lunch` and be left with an empty dataframe result.
+This empty dataframe result may not be what you want the end user to see.
 
 ```{python}
 #| code-fold: true
@@ -81,10 +79,8 @@ tips.loc[(tips["day"] == "Fri") & (tips["time"] == "Lunch")]
 
 <br />
 
-This empty dataframe result may not be what you want the end user to see.
-
-Here's an example of the behavior in a simple app.
-Try Setting the filter for `Fri` and `Lunch`.
+Here's an example shiny application showing this behavior.
+Try selecting both `Fri` and `Lunch`.
 
 :::{.column-screen-inset}
 ```{shinylive-python}
@@ -98,15 +94,17 @@ Try Setting the filter for `Fri` and `Lunch`.
 
 ## Adaptive Filters
 
-The new adaptive filters change updates the values of the
-inputs so it "adapts" to all the filtering that is done to your data,
+These new adaptive filters from this package change
+updates the values of the
+inputs so it "adapts" to all the filtering that is done to your data
 while keeping the results for values you have already selected.
-We think this provides a better user experience when
-exploring data interactively.
+This can provide a better user experience when
+interactively exploring data.
 
 ### Installing and Usage
 
-You can give the new components a try.
+You can give the new components a try by installing the package
+from PyPI.
 
 ```bash
 pip install shiny_adaptive_filter
@@ -118,21 +116,36 @@ To use the components you will need to import the shiny module
 import shiny_adaptive_filter as saf
 ```
 
-You then pass the module id and data into the server module,
-and then place the UI where you want with the ui module.
+The package is a [shiny module](https://shiny.posit.co/py/docs/modules.html),
+so the main usage will be similar to other shiny modules
+
+:::{.callout-note}
+A "shiny module" is not the same as a "python module".
+To learn more about shiny modules see this page from the
+Shiny documentation:
+<https://shiny.posit.co/py/docs/modules.html>
+:::
+
+You place the UI where you want with the ui module and a module ID,
+and then then pass the same module ID into the server module.
+The server module also needs the dataframe to filter.
 
 ```python
 # in the UI
-saf.filter_ui("adaptive") # filter UIs from the module
+saf.filter_ui("adaptive")  # filter UIs from the module
+```
 
+```python
 # in the server function
 adaptive_filters = adaptive_filter_module.filter_server(
-        "adaptive", # name of the module id
-        df=tips, # dataframe (can also be a reactive)
-    )
+    "adaptive",  # name of the module id
+    df=tips,  # dataframe (can also be a reactive)
+)
 ```
-The module returns an index of values that the application author
-can use to filter their data in a `@reactive.calc`
+
+The module returns a few things, the most important of which is
+an index of values, `"filter_idx"`, that the application author
+can use to filter their data in a `@reactive.calc`.
 
 ```python
 adaptive_filters_idx = adaptive_filters["filter_idx"]
@@ -154,7 +167,6 @@ since the combination of the values is not valid.
 
 ## file: requirements.txt
 shiny_adaptive_filter
-
 ```
 :::
 
@@ -164,6 +176,8 @@ on the data type and number of unique values.
 In this example,
 the `total_bill` and `tip` columns are `selectize` components because
 our example dataframe only has 5 rows of data.
+Normally these would be slider objects.
+We will talk about manual overrides next.
 :::
 
 #### Overrides
@@ -189,7 +203,7 @@ If you want to change the filter label, pass in a string of the new label.
 ```python
 override = {
     "total_bill": None, # disable the total_bill column
-    "tips": saf.FilterNumNumericRange(), # use a different default filter
+    "tip": saf.FilterNumNumericRange(), # use a different default filter
     "day": "Day of Week", # set custom component label
     "size": saf.FilterCatNumericCheckbox(label="Party Size"), # set component and label
 }
@@ -207,6 +221,53 @@ override = {
 shiny_adaptive_filter>=0.0.1.9004
 ```
 :::
+
+#### Reset
+
+This shiny module also returns a reset ability that
+removes all the selected options from all the adaptive filters.
+You can access it with the `"reset_all"` key.
+
+```python
+adaptive_filters = adaptive_filter_module.filter_server(
+    "adaptive", df=tips_original
+)
+
+adaptive_reset_all = adaptive_filters["reset_all"]
+```
+
+You can then use the `adaptive_reset_all()` to clear all the selections from the adaptive filters, typically this will be attached to a button
+that triggers an reactive event.
+
+```python
+# in the UI
+ui.input_action_button("reset", "Reset filters")
+```
+
+```python
+# in the server function
+@reactive.effect
+@reactive.event(input.reset)
+def _():
+    adaptive_reset_all()
+```
+
+This way you have the flexibility to incorporate resetting the adaptive filters
+along with any other behavior in the shiny application
+
+:::{.column-screen-inset}
+```{shinylive-python}
+#| standalone: true
+#| components: [editor, viewer]
+#| viewerHeight: 700
+
+{{< include ../../app/app-adaptive_filters/app-040-reset.py >}}
+
+## file: requirements.txt
+shiny_adaptive_filter>=0.0.1.9004
+```
+:::
+
 
 ## Summary
 

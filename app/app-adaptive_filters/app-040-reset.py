@@ -5,6 +5,7 @@ import shiny_adaptive_filter as saf
 
 app_ui = ui.page_sidebar(
     ui.sidebar(
+        ui.input_action_button("reset", "Reset filters"), # <<
         saf.filter_ui("adaptive"),
     ),
     ui.output_data_frame("render_df"),
@@ -20,12 +21,15 @@ def server(input, output, session):
     def render_df():
         return render.DataGrid(data_filtered())
 
-    override = { # <<
-        "total_bill": None, # <<
-        "tip": saf.FilterNumNumericRange(), # <<
-        "day": "Day of Week", # <<
-        "size": saf.FilterCatNumericCheckbox(label="Party Size"),
-    } # <<
+    @reactive.effect # <<
+    @reactive.event(input.reset) # <<
+    def _(): # <<
+        adaptive_reset_all() # <<
+
+    override = {
+        "total_bill": saf.FilterNumNumericRange(),
+        "tip": saf.FilterNumNumericRange(),
+    }
 
     filter_return = saf.filter_server(
         "adaptive",
@@ -33,6 +37,7 @@ def server(input, output, session):
         override=override,
     )
     filter_idx = filter_return["filter_idx"]
+    adaptive_reset_all = filter_return["reset_all"] # <<
 
 data = {
     'total_bill': [16.99, 10.34, 21.01, 23.68, 24.59],
